@@ -20,6 +20,7 @@ from typing import Iterator
 import uuid
 
 from myatri.contracts import Event, Record, SourceSpan
+from myatri._vendor.letta import atomic_write
 
 
 class ArchiveError(ValueError):
@@ -58,23 +59,8 @@ def _safe_id(value: str) -> None:
 
 
 def _atomic_write(path: Path, data: bytes) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    temp = path.with_name(f".{path.name}.{uuid.uuid4().hex}.tmp")
-    try:
-        with temp.open("xb") as stream:
-            stream.write(data)
-            stream.flush()
-            os.fsync(stream.fileno())
-        os.replace(temp, path)
-        # Persist rename metadata on systems that expose directory fsync.
-        if os.name != "nt":
-            fd = os.open(path.parent, os.O_RDONLY)
-            try:
-                os.fsync(fd)
-            finally:
-                os.close(fd)
-    finally:
-        temp.unlink(missing_ok=True)
+    # Keep the existing ArchiveStore/MemoryIndex seam and failure-injection API.
+    atomic_write(path, data)
 
 
 class ArchiveStore:

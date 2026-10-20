@@ -1,0 +1,32 @@
+{
+  "version": "0.1.2",
+  "source_directory_used": false,
+  "mode": "offline fixture; synthetic runtime",
+  "model_api_calls": 0,
+  "commands": [
+    {
+      "command": "init",
+      "exit_code": 0,
+      "stdout": "{\n  \"root\": \"D:\\\\DS_workspace\\\\MYATRI\\\\reports\\\\upstream_package_tmp_20261020\\\\runtime\",\n  \"persona\": \"persona@1\",\n  \"mode\": \"offline\",\n  \"outreach\": false\n}",
+      "stderr": ""
+    },
+    {
+      "command": "chat",
+      "exit_code": 0,
+      "stdout": "{\n  \"reply\": \"（离线演示）我已保存这轮对话。可以用 recall 检查来源、reflect 整理已有材料。\",\n  \"ref\": \"answer_msg_579719e70de94089a0a2999c15603450@1\"\n}",
+      "stderr": ""
+    },
+    {
+      "command": "compact",
+      "exit_code": 0,
+      "stdout": "{\n  \"record_id\": \"summary_8edfaf0e5f024fb58a63c65709e2c769\",\n  \"revision\": 1,\n  \"schema_version\": \"1.0\",\n  \"record_kind\": \"summary\",\n  \"agent_id\": \"atri\",\n  \"user_id\": \"local\",\n  \"created_at\": \"2026-10-20T11:44:33.384858+00:00\",\n  \"author_kind\": \"system\",\n  \"source_refs\": [\n    \"msg_579719e70de94089a0a2999c15603450@1\",\n    \"answer_msg_579719e70de94089a0a2999c15603450@1\",\n    \"persona@1\"\n  ],\n  \"supersedes_revision\": null,\n  \"generator\": null,\n  \"body_markdown\": \"[msg_579719e70de94089a0a2999c15603450@1] 测试原子写入后仍保留中文原话与来源。\\n[answer_msg_579719e70de94089a0a2999c15603450@1] （离线演示）我已保存这轮对话。可以用 recall 检查来源、reflect 整理已有材料。\",\n  \"payload\": {\n    \"mode\": \"manual\",\n    \"source_range\": [\n      \"msg_579719e70de94089a0a2999c15603450@1\",\n      \"answer_msg_579719e70de94089a0a2999c15603450@1\"\n    ],\n    \"excerpts\": [\n      {\n        \"ref\": \"msg_579719e70de94089a0a2999c15603450@1\",\n        \"role\": \"user\",\n        \"text\": \"测试原子写入后仍保留中文原话与来源。\",\n        \"full_preserved\": false,\n        \"truncated\": false\n      },\n      {\n        \"ref\": \"answer_msg_579719e70de94089a0a2999c15603450@1\",\n        \"role\": \"assistant\",\n        \"text\": \"（离线演示）我已保存这轮对话。可以用 recall 检查来源、reflect 整理已有材料。\",\n        \"full_preserved\": false,\n        \"truncated\": false\n      }\n    ],\n    \"persona_ref\": \"persona@1\",\n    \"state_refs\": [],\n    \"snapshot\": \"0c6d491c6a9a4912961daa08ac5de96d\",\n    \"preserve_refs\": [],\n    \"source_watermark\": \"answer_msg_579719e70de94089a0a2999c15603450@1\",\n    \"strategy\": \"source-excerpts-v1\",\n    \"semantic_items\": [],\n    \"llm_batches\": [],\n    \"processed_segments\": [],\n    \"reused_summary_ref\": null,\n    \"limitations\": [\n      \"LLM semantic compaction fallback: ProviderError\"\n    ]\n  },\n  \"content_hash\": \"38aba1c4ee18ad762f95f9501442a7a59fc4ba403246c6726828552f2a22d4d7\"\n}",
+      "stderr": ""
+    },
+    {
+      "command": "doctor",
+      "exit_code": 0,
+      "stdout": "{\n  \"ok\": true,\n  \"issues\": [],\n  \"snapshot\": \"fb0d173bfb3d4a6c94514f966da1a08a\",\n  \"index_generation\": \"index_66eb206c35144770bfec7bd09f0e7466\",\n  \"index_watermark\": \"dff64f85c06645df967013c4d0ef390c\",\n  \"jobs\": 8,\n  \"live_verified\": false,\n  \"scheduler_issues\": [],\n  \"failed_jobs\": [],\n  \"live_verification_scope\": \"configured provider protocol capabilities, not longitudinal personality quality\",\n  \"outreach_enabled\": false,\n  \"embedding\": \"local TF-IDF lexical baseline\"\n}",
+      "stderr": ""
+    }
+  ]
+}

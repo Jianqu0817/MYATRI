@@ -1,0 +1,33 @@
+[
+  {
+    "file": "myatri-0.1.2-py3-none-any.whl",
+    "sha256": "c3088e03284a85a794e65c70cde32a2d0a2fa82e0aa39d5fc0448b9f452de1e4",
+    "bytes": 132894,
+    "members": 79,
+    "checks": {
+      "amem-linked-neighbors": true,
+      "letta-atomic-snapshot": true,
+      "manifest": true,
+      "vendor_modules": true,
+      "private_tmp_excluded": true,
+      "digest_report_excluded": true
+    },
+    "forbidden_members": []
+  },
+  {
+    "file": "myatri-0.1.2.tar.gz",
+    "sha256": "ebc1541d93cf2267444a1c710b1f8cb9d245b745872add7834e23dbb9b6b8d81",
+    "bytes": 648979,
+    "members": 278,
+    "checks": {
+      "amem-linked-neighbors": true,
+      "letta-atomic-snapshot": true,
+      "manifest": true,
+      "vendor_modules": true,
+      "private_tmp_excluded": true,
+      "digest_report_excluded": true,
+      "final_validation_documented": true
+    },
+    "forbidden_members": []
+  }
+]

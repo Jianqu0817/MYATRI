@@ -4,7 +4,7 @@
   "plan_version": "0.3",
   "created_date": "2026-10-19",
   "timezone": "Asia/Shanghai",
-  "status": "persistence_repairs_offline_verified_semantic_pending",
+  "status": "upstream_reuse_offline_verified_semantic_pending",
   "execution_gate": "用户2026-10-20追加授权官方DeepSeek-V4.1-Flash小规模测试与Windows安全凭据存储；真实消息与外部部署仍未授权且未执行。",
   "authority": "01_工程规划书.md规定语义，本文给出排程。发生冲突先同步文档再实施。",
   "tasks": [
@@ -999,12 +999,12 @@
     "real_outreach": "disabled_not_implemented"
   },
   "final_test_result": {
-    "tests": 178,
+    "tests": 192,
     "failures": 0,
     "errors": 0,
     "skipped": 0,
-    "seconds": 138.968,
-    "report": "reports/fix_final_regression.xml"
+    "seconds": 139.706,
+    "report": "reports/upstream_reuse_regression.xml"
   },
   "component_audit": {
     "date": "2026-10-20",
@@ -1017,14 +1017,13 @@
   },
   "latest_change": {
     "date": "2026-10-20",
-    "scope": [
-      "FIX-PERSIST-01"
-    ],
+    "scope": "REUSE-01",
+    "version": "0.1.2",
     "status": "offline_verified",
-    "report": "reports/persistence_fixes_2026-10-20.md",
-    "normal_tests_passed": 178,
+    "report": "reports/upstream_reuse_2026-10-20.md",
+    "normal_tests_passed": 192,
     "new_official_requests": 0,
-    "note": "Historical live evidence is not validation of new attribution schema or long-term character quality."
+    "note": "两处小型上游源码改编，非完整A-MEM/Letta框架接入；保留0.1.1持久运行修复，长期语义仍待验证。"
   },
   "development_agent_policy": {
     "updated_date": "2026-10-20",
@@ -1065,5 +1064,27 @@
       "BGE_long_text_chunks",
       "incremental_index_scaling"
     ]
+  },
+  "upstream_reuse": {
+    "version": "0.1.2",
+    "date": "2026-10-20",
+    "report": "reports/upstream_reuse_2026-10-20.md",
+    "manifest": "LICENSES/upstream/manifest.json",
+    "adaptations": [
+      "amem-linked-neighbors",
+      "letta-atomic-snapshot"
+    ],
+    "full_upstream_frameworks_installed": false,
+    "model_api_calls": 0,
+    "semantic_improvement_claimed": false,
+    "full_regression": {
+      "tests": 192,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 139.706,
+      "report": "reports/upstream_reuse_regression.xml"
+    },
+    "wheel_smoke": "reports/upstream_wheel_smoke.json"
   }
 }

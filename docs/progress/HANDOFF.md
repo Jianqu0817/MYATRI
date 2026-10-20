@@ -1,5 +1,9 @@
 # MYATRI HANDOFF
 
+## 最新 REUSE-01（2026-10-20，0.1.2）
+
+用户要求真正复读 A-MEM / Letta 并移植现有功能中行为一致部分。生产已改为 `memory.graph` 调用 `_vendor.amem.iter_unique_neighbors`、`storage.archive._atomic_write` 委托 `_vendor.letta.atomic_write`；后者覆盖档案和索引发布。A-MEM只是8物理行的小内核，Letta只是通用文件写入；未装完整框架，不夸大成整套记忆/运行时接入。源码、许可证和哈希登记在 LICENSES/upstream/manifest.json，报告 reports/upstream_reuse_2026-10-20.md；wheel附带上游许可。A-MEM35/Letta38定向通过；完整192项回归通过（140.56s），wheel在源码外离线init/chat/compact/doctor通过，发行包上游许可/临时路径检查通过。旧未复制声明已加历史说明。无真实模型API调用/凭据读取/运行库修改。两个子Agent完成后由主Agent收尾，禁止递归派生。
+
 ## FIX-PERSIST-01 最终检查点（2026-10-20，0.1.1本地修复已验）
 
 用户已授权修复审查问题；余额中断后已完成接续。不要退回只读审查或重做规划。ADR0006记录有限注意、原文来源、允许不改变、真实表达/后续反馈与共享预算设计。最终报告reports/persistence_fixes_2026-10-20.md：178项完整回归（138.97s）+最终归因16项复测+打包专项12项均通过。0.1.1 wheel/sdist真实构建、源码目录外实际wheel聊天/压缩/doctor通过，package_smoke_0.1.1.json和dist/SHA256SUMS-0.1.1.txt记录包验证。旧0.1.0留存，当前源码editable也已离线更新至0.1.1，无新第三方依赖。

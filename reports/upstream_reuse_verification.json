@@ -1,0 +1,30 @@
+{
+  "date": "2026-10-20",
+  "method": "local official Git clone and raw pinned Git blobs; no model API",
+  "results": [
+    {
+      "id": "amem-linked-neighbors",
+      "commit_matches": true,
+      "source_hash_matches": true,
+      "license_hash_matches": true,
+      "lines": [
+        554,
+        583
+      ],
+      "excerpt_sha256": "e23439ee7287bb24292d8b425ea633219df0525b6c94295c024cbc461050c9fd",
+      "verified": true
+    },
+    {
+      "id": "letta-atomic-snapshot",
+      "commit_matches": true,
+      "source_hash_matches": true,
+      "license_hash_matches": true,
+      "lines": [
+        145,
+        167
+      ],
+      "excerpt_sha256": "da265c9560b7113c64b3abdae44c4bc837cfad9b0c0624858ac556c24f3123a6",
+      "verified": true
+    }
+  ]
+}

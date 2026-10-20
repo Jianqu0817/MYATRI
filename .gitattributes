@@ -1,0 +1,3 @@
+# Keep upstream license bytes identical to the pinned Git blobs on Windows.
+LICENSES/upstream/A-MEM-LICENSE -text
+LICENSES/upstream/Letta-Code-LICENSE.txt -text

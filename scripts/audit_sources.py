@@ -1,4 +1,4 @@
-"""Read-only verification of locked commits/licenses, without downloading frameworks."""
+"""Read-only verification of locked commits/licenses and registered code reuse."""
 import concurrent.futures
 import json
 from pathlib import Path
@@ -13,7 +13,8 @@ def check(repo):
         request = urllib.request.Request(base + suffix, headers={"User-Agent": "MYATRI-source-audit"})
         with urllib.request.urlopen(request, timeout=20) as response:
             return json.load(response)
-    result = {"repository": repo["repository"], "expected_commit": repo["commit"], "copied_code": False}
+    result = {"repository": repo["repository"], "expected_commit": repo["commit"],
+              "copied_code": bool(repo.get("code_reuse")), "code_reuse": repo.get("code_reuse", [])}
     try:
         commit = read("/commits/" + repo["commit"])
         license_data = read("/license?ref=" + repo["commit"])

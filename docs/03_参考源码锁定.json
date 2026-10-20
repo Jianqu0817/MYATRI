@@ -1,8 +1,8 @@
 {
   "schema_version": "1.0",
-  "verified_date": "2026-10-19",
+  "verified_date": "2026-10-20",
   "timezone": "Asia/Shanghai",
-  "verification": "GitHub REST API确认提交与许可证标识；获取以下源码并静态阅读关键段落/接口。无安装、运行、付费调用或代码移植。",
+  "verification": "初始源码静态核查后，2026-10-20 从官方仓库重读固定提交；已局部改编A-MEM/Letta Code并离线验证。完整框架未安装或运行。",
   "hash_note": "sha256为下载到临时核查目录的UTF-8文本文件字节校验，Git提交是权威版本定位。摘要校验不表示整个文件逐行审计。",
   "repositories": [
     {
@@ -13,7 +13,7 @@
       "license_reported_by_github": "MIT",
       "license_file_url": "https://github.com/agiresearch/A-mem/blob/ceffb860f0712bbae97b184d440df62bc910ca8d/LICENSE",
       "role": "动态关联记忆：主要代码参考",
-      "adoption_status": "拟借鉴流程与局部Python实现；目前未复制源代码",
+      "adoption_status": "search_agentic的有界关联邻居去重内核已局部改编并接入生产回忆；其余仅参考。",
       "review_scope": [
         "MemoryNote字段；AgenticMemorySystem初始化",
         "add_note/process_memory/find_related_memories/search_agentic",
@@ -24,7 +24,9 @@
         "默认初始化会尝试重置集合，不能直接用于长期档案",
         "没有独立的自动聚类、分层主题、GNN或完整图服务",
         "analyze_content未在已读add_note中自动调用",
-        "邻居位置/稳定ID、结果截断与投影同步需重审"
+        "邻居位置/稳定ID、结果截断与投影同步需重审",
+        "本轮确认完整search_agentic的memories[:k]可能截去新增邻居；未照搬。",
+        "本轮确认process_memory以检索排名访问插入序列可能指向错误邻居；未照搬。"
       ],
       "source_files": [
         {
@@ -42,6 +44,9 @@
           "url": "https://github.com/agiresearch/A-mem/blob/ceffb860f0712bbae97b184d440df62bc910ca8d/agentic_memory/llm_controller.py",
           "downloaded_text_sha256": "44e7d228326fe78dd8ecb8c8176364511547f5fef7cd7d58e433e883caeae0bb"
         }
+      ],
+      "code_reuse": [
+        "amem-linked-neighbors"
       ]
     },
     {
@@ -259,6 +264,96 @@
           "downloaded_text_sha256": "ec0dbe6c1e5c91134c906f852f485b4adce740c85d3cde7b69eaed4c5ce09c18"
         }
       ]
+    },
+    {
+      "repository": "letta-ai/letta-code",
+      "url": "https://github.com/letta-ai/letta-code",
+      "commit": "e8073d4e475ab7f56e76f9aaeea81a7618a92575",
+      "commit_url": "https://github.com/letta-ai/letta-code/commit/e8073d4e475ab7f56e76f9aaeea81a7618a92575",
+      "license_reported_by_github": "Apache-2.0",
+      "license_file_url": "https://github.com/letta-ai/letta-code/blob/e8073d4e475ab7f56e76f9aaeea81a7618a92575/LICENSE",
+      "license_verified_from": "pinned Git LICENSE blob; Letta Code also has Brand Assets Exclusion",
+      "role": "源码等价复读与局部采用",
+      "adoption_status": "writeAuthFile完整快照原子写入内核由TypeScript改编为Python，已接入档案和索引发布。",
+      "review_scope": [
+        "local-provider-auth-store/writeAuthFile与故障测试",
+        "local-message-projection工具协议修补",
+        "local-context-estimate估算",
+        "turn-recovery-policy重试边界"
+      ],
+      "limitations": [
+        "仅局部文件写入，不接入MemFS/Dreaming/完整运行时。",
+        "不采用品牌资产，保留完整原始LICENSE。"
+      ],
+      "code_reuse": [
+        "letta-atomic-snapshot"
+      ],
+      "source_files": [
+        {
+          "path": "src/backend/local/local-provider-auth-store.ts",
+          "url": "https://github.com/letta-ai/letta-code/blob/e8073d4e475ab7f56e76f9aaeea81a7618a92575/src/backend/local/local-provider-auth-store.ts",
+          "git_blob_sha256": "e9aa0e740553cebcd58767f1d6e37c75a5784e340095c40f64fbd79820c5ab29"
+        },
+        {
+          "path": "src/backend/local/local-message-projection.ts",
+          "url": "https://github.com/letta-ai/letta-code/blob/e8073d4e475ab7f56e76f9aaeea81a7618a92575/src/backend/local/local-message-projection.ts",
+          "git_blob_sha256": "9d418ea61a1ebf55cf6e75757fe662665f2c5f327519c995ed6a4d3c57b37d3e"
+        },
+        {
+          "path": "src/backend/local/local-context-estimate.ts",
+          "url": "https://github.com/letta-ai/letta-code/blob/e8073d4e475ab7f56e76f9aaeea81a7618a92575/src/backend/local/local-context-estimate.ts",
+          "git_blob_sha256": "ba9a176d83bad6acd8870f30a0e7903678fb80d638aa914b5748f15bf3f75985"
+        },
+        {
+          "path": "src/agent/turn-recovery-policy.ts",
+          "url": "https://github.com/letta-ai/letta-code/blob/e8073d4e475ab7f56e76f9aaeea81a7618a92575/src/agent/turn-recovery-policy.ts",
+          "git_blob_sha256": "8cfe126aeb34e213fc2b980f1f1234a6ba0691d1a9827ed9e435a56c4dfaba98"
+        }
+      ]
+    },
+    {
+      "repository": "letta-ai/letta",
+      "url": "https://github.com/letta-ai/letta",
+      "commit": "56ba9c25552605eec89de8ed3dc6394b625c1993",
+      "commit_url": "https://github.com/letta-ai/letta/commit/56ba9c25552605eec89de8ed3dc6394b625c1993",
+      "license_reported_by_github": "Apache-2.0",
+      "license_file_url": "https://github.com/letta-ai/letta/blob/56ba9c25552605eec89de8ed3dc6394b625c1993/LICENSE",
+      "license_verified_from": "pinned Git LICENSE blob; Letta Code also has Brand Assets Exclusion",
+      "role": "源码等价复读与局部采用",
+      "adoption_status": "archive分支旧Python实现只读对照，未移植。",
+      "review_scope": [
+        "summarizer/compact/sliding-window",
+        "json_helpers与工具协议",
+        "line_chunker与middle_truncate_text"
+      ],
+      "limitations": [
+        "main已迁移到letta-code；旧Python代码不代表当前产品。",
+        "宽松协议修补、JSON清洗和摘要/分块文本变化不与原文span契约等价。"
+      ],
+      "code_reuse": [],
+      "source_files": [
+        {
+          "path": "letta/services/summarizer/compact.py",
+          "url": "https://github.com/letta-ai/letta/blob/56ba9c25552605eec89de8ed3dc6394b625c1993/letta/services/summarizer/compact.py",
+          "git_blob_sha256": "8c12936df53e56204baab2cc1807094afe1c53021b418d3fc77fda9923393df9"
+        },
+        {
+          "path": "letta/services/summarizer/summarizer_sliding_window.py",
+          "url": "https://github.com/letta-ai/letta/blob/56ba9c25552605eec89de8ed3dc6394b625c1993/letta/services/summarizer/summarizer_sliding_window.py",
+          "git_blob_sha256": "afcb4e266168effa433645b706b096301e365efe68d9f4fd1d3a4e995df905b8"
+        },
+        {
+          "path": "letta/helpers/json_helpers.py",
+          "url": "https://github.com/letta-ai/letta/blob/56ba9c25552605eec89de8ed3dc6394b625c1993/letta/helpers/json_helpers.py",
+          "git_blob_sha256": "8f58f748629d2ac5514371148c82e80a6a0ea2ccc4721b182cb9a5575a339074"
+        },
+        {
+          "path": "letta/services/file_processor/chunker/line_chunker.py",
+          "url": "https://github.com/letta-ai/letta/blob/56ba9c25552605eec89de8ed3dc6394b625c1993/letta/services/file_processor/chunker/line_chunker.py",
+          "git_blob_sha256": "02516070f223cb6c387a79da43095829e2a1baf99da6e22a52b10d331a7653ba"
+        }
+      ],
+      "branch": "archive"
     }
   ],
   "official_documents": [
@@ -306,5 +401,11 @@
     }
   ],
   "plan_version": "0.2",
-  "revision_note": "新增Thoughtful Agents与Ashley Emotional Echo临时状态源码参考；仍未安装、实现或发送消息"
+  "revision_note": "0.1.2：新增Letta当前与archive源码核对，登记两处实际局部改编；原始规划核查信息保留initial_verification。",
+  "initial_verification": {
+    "date": "2026-10-19",
+    "description": "GitHub REST API确认提交与许可证标识；获取以下源码并静态阅读关键段落/接口。无安装、运行、付费调用或代码移植。",
+    "revision_note": "新增Thoughtful Agents与Ashley Emotional Echo临时状态源码参考；仍未安装、实现或发送消息"
+  },
+  "reuse_manifest": "LICENSES/upstream/manifest.json"
 }

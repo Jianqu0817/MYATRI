@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "myatri"
-version = "0.1.1"
+version = "0.1.2"
 description = "Persistent evidence-grounded character memory and gradual persona evolution"
 requires-python = ">=3.12,<3.13"
 dependencies = [
@@ -45,6 +45,8 @@ exclude = [
     "/var", "/.venv", "/dist", "**/__pycache__", "**/*.pyc",
     "/reports/*_tmp*/**", "/reports/fix_context_tmp_20261020/**",
     "/reports/package_smoke_0.1.1.json",
+    # The artifact digest report cannot be included in the artifact it hashes.
+    "/reports/upstream_package_check.json",
     "**/.env", "**/.env.*", "**/*.local.toml", "**/credentials.json", "**/credentials.toml",
     "**/secrets.json", "**/secrets.toml", "**/api_key.txt", "**/api-key.txt", "**/*.credential",
     "**/*.credential.json", "**/*.pem", "**/*.pfx", "**/*.p12", "**/*.key",
@@ -70,7 +72,7 @@ exclude = [
 include = [
     "/src", "/prompts", "/config/defaults.toml", "/config/schedules.toml",
     "/config/persona_template.md", "/config/live.example.toml", "/docs", "/tests", "/scripts",
-    "/reports", "/evals", "/LICENSES", "/THIRD_PARTY_NOTICES.md", "/README.md", "/pyproject.toml", "/uv.lock", "/.gitignore",
+    "/reports", "/evals", "/LICENSES", "/THIRD_PARTY_NOTICES.md", "/README.md", "/pyproject.toml", "/uv.lock", "/.gitignore", "/.gitattributes",
 ]
 
 [tool.hatch.build.targets.wheel]
@@ -78,6 +80,7 @@ packages = ["src/myatri"]
 dev-mode-dirs = ["src"]
 
 [tool.hatch.build.targets.wheel.force-include]
+"LICENSES/upstream" = "myatri/_vendor/upstream"
 "prompts" = "myatri/prompts"
 "config/defaults.toml" = "myatri/config/defaults.toml"
 "config/schedules.toml" = "myatri/config/schedules.toml"

@@ -1,6 +1,7 @@
 """Sparse similarity graph and separately typed, evidence-backed semantic edges."""
 from __future__ import annotations
 
+from myatri._vendor.amem import iter_unique_neighbors
 from myatri.contracts import Edge, Record, digest
 from .vector_index import ExactVectorIndex
 
@@ -78,18 +79,20 @@ class MemoryGraph:
         path_map = {ref: [ref] for ref in seeds}
         for _ in range(depth):
             next_frontier = []
-            for edge in self.edges:
-                if edge["type"] not in accepted:
-                    continue
-                left, right = edge["from_ref"], edge["to_ref"]
-                for origin, target in ((left, right), (right, left)):
-                    if origin in frontier:
-                        edges.append(edge)
-                        if target not in visited and len(visited) < limit:
-                            visited.add(target)
-                            next_frontier.append(target)
-                            path_map[target] = path_map[origin] + [target]
-                            paths.append(path_map[target])
+            def linked_candidates():
+                for edge in self.edges:
+                    if edge["type"] not in accepted:
+                        continue
+                    left, right = edge["from_ref"], edge["to_ref"]
+                    for origin, target in ((left, right), (right, left)):
+                        if origin in frontier:
+                            edges.append(edge)
+                            yield origin, target
+
+            for origin, target in iter_unique_neighbors(linked_candidates(), visited, limit - len(visited)):
+                next_frontier.append(target)
+                path_map[target] = path_map[origin] + [target]
+                paths.append(path_map[target])
             frontier = next_frontier
         return {"nodes": sorted(visited), "edges": edges, "paths": paths}
 

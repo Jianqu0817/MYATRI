@@ -1,0 +1,114 @@
+{
+  "scope": "synthetic semantic-compaction/activation smoke, not longitudinal quality",
+  "max_requests": 2,
+  "max_conservative_usd": 0.03,
+  "attempted_requests": 2,
+  "requests": [
+    {
+      "purpose": "temporary_state_activation",
+      "prompt_version": "activation/v1",
+      "reserved_upper_usd": 0.0015714,
+      "status": "received",
+      "provider": "deepseek",
+      "model": "deepseek-flash",
+      "usage": {
+        "prompt_tokens": 493,
+        "completion_tokens": 87,
+        "total_tokens": 580,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 493
+      },
+      "finish_reason": "stop"
+    },
+    {
+      "purpose": "context_compaction",
+      "prompt_version": "compaction/v1",
+      "reserved_upper_usd": 0.0030746999999999997,
+      "status": "received",
+      "provider": "deepseek",
+      "model": "deepseek-flash",
+      "usage": {
+        "prompt_tokens": 510,
+        "completion_tokens": 152,
+        "total_tokens": 662,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 510
+      },
+      "finish_reason": "stop"
+    }
+  ],
+  "cases": {
+    "activation": {
+      "passed": true,
+      "method": "llm",
+      "selected_refs": [
+        "context_synthetic_intent@1"
+      ],
+      "limitations": [],
+      "generator": {
+        "provider": "deepseek",
+        "model": "deepseek-flash",
+        "prompt_version": "activation/v1",
+        "run_id": "activation_6ddf207faea34534976af727a165d234"
+      }
+    },
+    "compaction": {
+      "passed": true,
+      "strategy": "llm-semantic-v1",
+      "summary_ref": "summary_917907c014a147b6b1b9ac948fd6bb2e@1",
+      "generator": {
+        "provider": "deepseek",
+        "model": "deepseek-flash",
+        "prompt_version": "compaction/v1",
+        "run_id": "summary_917907c014a147b6b1b9ac948fd6bb2e"
+      },
+      "items": [
+        {
+          "category": "agreement",
+          "text": "用户提出纯合成测试约定：周六下午三点去图书馆，改期前先确认。",
+          "source_spans": [
+            {
+              "message_ref": "context_synthetic_plan@1",
+              "start": 0,
+              "end": 26,
+              "quote": "纯合成测试约定：周六下午三点去图书馆，改期前先确认。"
+            }
+          ],
+          "source_refs": [
+            "context_synthetic_plan@1"
+          ]
+        },
+        {
+          "category": "uncertainty",
+          "text": "助手把该安排标为测试中的暂定安排，并表示不代表活动已完成。",
+          "source_spans": [
+            {
+              "message_ref": "context_synthetic_reply@1",
+              "start": 0,
+              "end": 21,
+              "quote": "这是测试中的暂定安排，不代表已经完成活动。"
+            }
+          ],
+          "source_refs": [
+            "context_synthetic_reply@1"
+          ]
+        }
+      ],
+      "limitations": [],
+      "preserve_refs": [
+        "context_synthetic_plan@1"
+      ]
+    }
+  },
+  "status": "passed",
+  "archive_errors": [],
+  "persona_unchanged": true,
+  "state_unchanged": true,
+  "estimated_received_usd": 0.0005877
+}

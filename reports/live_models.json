@@ -1,0 +1,19 @@
+{
+  "date": "2026-10-20",
+  "endpoint": "https://api.deepseek.com/models",
+  "http_status": 200,
+  "models": [
+    {
+      "id": "deepseek-flash",
+      "name": "DeepSeek-V4.1-Flash",
+      "owned_by": "deepseek"
+    },
+    {
+      "id": "deepseek-v4-pro",
+      "name": "DeepSeek-V4-Pro",
+      "owned_by": "deepseek"
+    }
+  ],
+  "credential_store": "Windows Credential Manager",
+  "secret_written_to_project": false
+}

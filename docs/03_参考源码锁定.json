@@ -1,0 +1,310 @@
+{
+  "schema_version": "1.0",
+  "verified_date": "2026-10-19",
+  "timezone": "Asia/Shanghai",
+  "verification": "GitHub REST API确认提交与许可证标识；获取以下源码并静态阅读关键段落/接口。无安装、运行、付费调用或代码移植。",
+  "hash_note": "sha256为下载到临时核查目录的UTF-8文本文件字节校验，Git提交是权威版本定位。摘要校验不表示整个文件逐行审计。",
+  "repositories": [
+    {
+      "repository": "agiresearch/A-mem",
+      "url": "https://github.com/agiresearch/A-mem",
+      "commit": "ceffb860f0712bbae97b184d440df62bc910ca8d",
+      "commit_url": "https://github.com/agiresearch/A-mem/commit/ceffb860f0712bbae97b184d440df62bc910ca8d",
+      "license_reported_by_github": "MIT",
+      "license_file_url": "https://github.com/agiresearch/A-mem/blob/ceffb860f0712bbae97b184d440df62bc910ca8d/LICENSE",
+      "role": "动态关联记忆：主要代码参考",
+      "adoption_status": "拟借鉴流程与局部Python实现；目前未复制源代码",
+      "review_scope": [
+        "MemoryNote字段；AgenticMemorySystem初始化",
+        "add_note/process_memory/find_related_memories/search_agentic",
+        "ChromaRetriever与PersistentChromaRetriever",
+        "LLMController与OpenAI/Ollama适配"
+      ],
+      "limitations": [
+        "默认初始化会尝试重置集合，不能直接用于长期档案",
+        "没有独立的自动聚类、分层主题、GNN或完整图服务",
+        "analyze_content未在已读add_note中自动调用",
+        "邻居位置/稳定ID、结果截断与投影同步需重审"
+      ],
+      "source_files": [
+        {
+          "path": "agentic_memory/memory_system.py",
+          "url": "https://github.com/agiresearch/A-mem/blob/ceffb860f0712bbae97b184d440df62bc910ca8d/agentic_memory/memory_system.py",
+          "downloaded_text_sha256": "fa58c3ed405e37d298a3d11e5cd69459bc9709004461c0e01fc0c497c77c949b"
+        },
+        {
+          "path": "agentic_memory/retrievers.py",
+          "url": "https://github.com/agiresearch/A-mem/blob/ceffb860f0712bbae97b184d440df62bc910ca8d/agentic_memory/retrievers.py",
+          "downloaded_text_sha256": "a4cd9645b9df0774f7f67bdfff3cf4d1a41911b4bac3843208db2019b57e311d"
+        },
+        {
+          "path": "agentic_memory/llm_controller.py",
+          "url": "https://github.com/agiresearch/A-mem/blob/ceffb860f0712bbae97b184d440df62bc910ca8d/agentic_memory/llm_controller.py",
+          "downloaded_text_sha256": "44e7d228326fe78dd8ecb8c8176364511547f5fef7cd7d58e433e883caeae0bb"
+        }
+      ]
+    },
+    {
+      "repository": "alpaim/ashley",
+      "url": "https://github.com/alpaim/ashley",
+      "commit": "c2e0c0b5563773c80a5d2acc0c5fb007c04e4212",
+      "commit_url": "https://github.com/alpaim/ashley/commit/c2e0c0b5563773c80a5d2acc0c5fb007c04e4212",
+      "license_reported_by_github": "MIT",
+      "license_file_url": "https://github.com/alpaim/ashley/blob/c2e0c0b5563773c80a5d2acc0c5fb007c04e4212/LICENSE",
+      "role": "常驻角色、反思与人格演化：主要代码参考",
+      "adoption_status": "Rust流程与模块组织借鉴，在Python中重写；目前未复制源代码",
+      "review_scope": [
+        "main与AshleyRuntime组装",
+        "run/finalize_current_session/run_heartbeat_cycle",
+        "generate_response与complete_with_chat_tools",
+        "LlmClient及存储/工具接口轮廓",
+        "should_deep_reflect与check_identity_evolution",
+        "多阶段反思、人格修改与演化日志",
+        "向量记忆打分、检索、原子文件写入",
+        "0.2补读EmotionalEcho、空闲处理、上下文注入与resolved条件"
+      ],
+      "limitations": [
+        "静态分支存在不等于所有分支已运行验证",
+        "主循环分支内await长任务会推迟其他事件处理",
+        "固定时段和原有关系/情绪设定不能直接套用",
+        "未验证本机Windows可编译与部署；本方案不需要部署Rust应用",
+        "echo按年龄/次数解决不直接采用；时间触发复查，不证明角色已放下"
+      ],
+      "source_files": [
+        {
+          "path": "src/main.rs",
+          "url": "https://github.com/alpaim/ashley/blob/c2e0c0b5563773c80a5d2acc0c5fb007c04e4212/src/main.rs",
+          "downloaded_text_sha256": "314b58fba51041eea660d95171f47dd5e9db588aa1e1731a99b45e5fc1042be2"
+        },
+        {
+          "path": "src/runner.rs",
+          "url": "https://github.com/alpaim/ashley/blob/c2e0c0b5563773c80a5d2acc0c5fb007c04e4212/src/runner.rs",
+          "downloaded_text_sha256": "1538a998f33c4a1c58d185f8fa81897a25b06971c3f80a200ce0bf75baea7010"
+        },
+        {
+          "path": "src/agent.rs",
+          "url": "https://github.com/alpaim/ashley/blob/c2e0c0b5563773c80a5d2acc0c5fb007c04e4212/src/agent.rs",
+          "downloaded_text_sha256": "21bf3b291fa2c309f9d8e2059b5159a2e7915cb9c01702d3c36fdad20e97bd8e"
+        },
+        {
+          "path": "src/llm.rs",
+          "url": "https://github.com/alpaim/ashley/blob/c2e0c0b5563773c80a5d2acc0c5fb007c04e4212/src/llm.rs",
+          "downloaded_text_sha256": "e5a8c00d2db15f097c2c79050536da4c2f663624e2be59aace303ca72c394e0a"
+        },
+        {
+          "path": "src/prompt.rs",
+          "url": "https://github.com/alpaim/ashley/blob/c2e0c0b5563773c80a5d2acc0c5fb007c04e4212/src/prompt.rs",
+          "downloaded_text_sha256": "77a3dedf10cb514d4c276d94999907e1257810ba1b479af0d957011cfe5c7c64"
+        },
+        {
+          "path": "src/workspace.rs",
+          "url": "https://github.com/alpaim/ashley/blob/c2e0c0b5563773c80a5d2acc0c5fb007c04e4212/src/workspace.rs",
+          "downloaded_text_sha256": "12dae6919a3e38f7968b43ca92c6938a1d0a9020e3921ea87d927ea5fd635b94"
+        },
+        {
+          "path": "src/heartbeat/mod.rs",
+          "url": "https://github.com/alpaim/ashley/blob/c2e0c0b5563773c80a5d2acc0c5fb007c04e4212/src/heartbeat/mod.rs",
+          "downloaded_text_sha256": "145261f24588a97bb6b36c1871c38330bf8c95abaafa4b0ba0b3c26e61b40379"
+        },
+        {
+          "path": "src/heartbeat/multi_loop.rs",
+          "url": "https://github.com/alpaim/ashley/blob/c2e0c0b5563773c80a5d2acc0c5fb007c04e4212/src/heartbeat/multi_loop.rs",
+          "downloaded_text_sha256": "dd5a8ea0e888dfb1eaff59a7c756397d446eccd54fdc23df521537986a4946da"
+        },
+        {
+          "path": "src/deep_reflection/engine.rs",
+          "url": "https://github.com/alpaim/ashley/blob/c2e0c0b5563773c80a5d2acc0c5fb007c04e4212/src/deep_reflection/engine.rs",
+          "downloaded_text_sha256": "573e92da1a8cdc337fd7965d6595c8feff2b4bd9583978c5ac8f622ad5049082"
+        },
+        {
+          "path": "src/identity_evolution/engine.rs",
+          "url": "https://github.com/alpaim/ashley/blob/c2e0c0b5563773c80a5d2acc0c5fb007c04e4212/src/identity_evolution/engine.rs",
+          "downloaded_text_sha256": "0b85f511c54afeedeb8691f8c0f861664dfc0a5a71fbf11569df02d6466c8a4c"
+        },
+        {
+          "path": "src/memory/mod.rs",
+          "url": "https://github.com/alpaim/ashley/blob/c2e0c0b5563773c80a5d2acc0c5fb007c04e4212/src/memory/mod.rs",
+          "downloaded_text_sha256": "d7549ef03941eafb9860c850ef546a43e890bc5d64ea744d56729384b51c5f5c"
+        },
+        {
+          "path": "src/memory/search.rs",
+          "url": "https://github.com/alpaim/ashley/blob/c2e0c0b5563773c80a5d2acc0c5fb007c04e4212/src/memory/search.rs",
+          "downloaded_text_sha256": "ef107c30f047ba43cf4e5aad98e93a98553258909e18fbd539601d261a636ff4"
+        },
+        {
+          "path": "src/memory/store.rs",
+          "url": "https://github.com/alpaim/ashley/blob/c2e0c0b5563773c80a5d2acc0c5fb007c04e4212/src/memory/store.rs",
+          "downloaded_text_sha256": "fbc893f91f01494c41cddcbd5e1c83a6cb7d59e2ce1f19b902a94e948b0cb049"
+        },
+        {
+          "path": "src/tools/executor.rs",
+          "url": "https://github.com/alpaim/ashley/blob/c2e0c0b5563773c80a5d2acc0c5fb007c04e4212/src/tools/executor.rs",
+          "downloaded_text_sha256": "d7a4afec10437fc5c12105e35191d6b935743fd1ddd53053971fc4bb0b03185d"
+        },
+        {
+          "path": "src/reflection.rs",
+          "url": "https://github.com/alpaim/ashley/blob/c2e0c0b5563773c80a5d2acc0c5fb007c04e4212/src/reflection.rs",
+          "downloaded_text_sha256": "07736bd431d98929d38af2dd27ce3a340daa6adad6f7db7f73a5b863b34e6d1b"
+        },
+        {
+          "path": "src/emotional/echo.rs",
+          "url": "https://github.com/alpaim/ashley/blob/c2e0c0b5563773c80a5d2acc0c5fb007c04e4212/src/emotional/echo.rs",
+          "downloaded_text_sha256": "4af4b6b1174f4228d45362dd8f69882261183850df8d369a2e503d81d9d3adc6"
+        }
+      ]
+    },
+    {
+      "repository": "microsoft/graphrag",
+      "url": "https://github.com/microsoft/graphrag",
+      "commit": "5faaaf4f5685fa2056fa8c3bf9342cb089f2942f",
+      "commit_url": "https://github.com/microsoft/graphrag/commit/5faaaf4f5685fa2056fa8c3bf9342cb089f2942f",
+      "license_reported_by_github": "MIT",
+      "license_file_url": "https://github.com/microsoft/graphrag/blob/5faaaf4f5685fa2056fa8c3bf9342cb089f2942f/LICENSE",
+      "role": "社区发现与分层摘要：方法参考",
+      "adoption_status": "方法与输出结构参考；不整体依赖其流水线",
+      "review_scope": [
+        "cluster_graph/hierarchical_leiden调用及层次父子映射",
+        "create_community_reports工作流的输入与报告组件"
+      ],
+      "limitations": [
+        "默认以抽取的实体关系图为中心，我们以事件近邻图为中心",
+        "Leiden分区本身不提供重叠主题",
+        "不宣称局部重聚类精确保持全局优化结果"
+      ],
+      "source_files": [
+        {
+          "path": "packages/graphrag/graphrag/index/operations/cluster_graph.py",
+          "url": "https://github.com/microsoft/graphrag/blob/5faaaf4f5685fa2056fa8c3bf9342cb089f2942f/packages/graphrag/graphrag/index/operations/cluster_graph.py",
+          "downloaded_text_sha256": "93c51b3f562c5176170d226ae26234360bc80feee799e06feccea923e22e10be"
+        },
+        {
+          "path": "packages/graphrag/graphrag/index/workflows/create_community_reports.py",
+          "url": "https://github.com/microsoft/graphrag/blob/5faaaf4f5685fa2056fa8c3bf9342cb089f2942f/packages/graphrag/graphrag/index/workflows/create_community_reports.py",
+          "downloaded_text_sha256": "ae1cd8ccd4fff439ca5480439b5f09ea9330680f39abbea53e91a288992cc724"
+        }
+      ]
+    },
+    {
+      "repository": "getzep/graphiti",
+      "url": "https://github.com/getzep/graphiti",
+      "commit": "7b0182f94d27075db488636cd5456981ee10b987",
+      "commit_url": "https://github.com/getzep/graphiti/commit/7b0182f94d27075db488636cd5456981ee10b987",
+      "license_reported_by_github": "Apache-2.0",
+      "license_file_url": "https://github.com/getzep/graphiti/blob/7b0182f94d27075db488636cd5456981ee10b987/LICENSE",
+      "role": "时间、来源和混合检索：方法参考",
+      "adoption_status": "数据建模和检索方法参考；不整体部署图数据库栈",
+      "review_scope": [
+        "EpisodicNode内容/时间与EntityNode摘要字段",
+        "EntityEdge的episodes/valid_at/invalid_at等字段",
+        "search入口及全文/向量/BFS/RRF/MMR组合"
+      ],
+      "limitations": [
+        "记忆中的主观假设不能冒充事实",
+        "本次只核查指定源码，不验证全项目性能/部署",
+        "本方案先使用SQLite边表和内存视图"
+      ],
+      "source_files": [
+        {
+          "path": "graphiti_core/nodes.py",
+          "url": "https://github.com/getzep/graphiti/blob/7b0182f94d27075db488636cd5456981ee10b987/graphiti_core/nodes.py",
+          "downloaded_text_sha256": "47f191e927c467e97d5b80286b7cbe64365ab6d67a4734570d4019b61d775897"
+        },
+        {
+          "path": "graphiti_core/edges.py",
+          "url": "https://github.com/getzep/graphiti/blob/7b0182f94d27075db488636cd5456981ee10b987/graphiti_core/edges.py",
+          "downloaded_text_sha256": "637732ae4291ca0e5b53e43dd92be6f46a91e352719cb7ea1570ebab7d5d0e33"
+        },
+        {
+          "path": "graphiti_core/search/search.py",
+          "url": "https://github.com/getzep/graphiti/blob/7b0182f94d27075db488636cd5456981ee10b987/graphiti_core/search/search.py",
+          "downloaded_text_sha256": "bd224cb6a272d0be096779f3105a78639538f84d043a0c5ff5efddc9e46edf2a"
+        }
+      ]
+    },
+    {
+      "repository": "xybruceliu/thoughtful-agents",
+      "url": "https://github.com/xybruceliu/thoughtful-agents",
+      "commit": "4c8d5beb249f852465463ed236fbbff95e0b6b0d",
+      "commit_url": "https://github.com/xybruceliu/thoughtful-agents/commit/4c8d5beb249f852465463ed236fbbff95e0b6b0d",
+      "license_reported_by_github": "Apache-2.0",
+      "license_file_url": "https://github.com/xybruceliu/thoughtful-agents/blob/4c8d5beb249f852465463ed236fbbff95e0b6b0d/LICENSE",
+      "role": "临时念头池与按情境显著性：代码与方法参考",
+      "adoption_status": "0.2新增拟借鉴；未复制代码、未运行项目",
+      "review_scope": [
+        "Thought字段与ThoughtReservoir add/remove/retrieve_top_k",
+        "MentalObject的embedding/weight/saliency及同步/异步生成入口",
+        "compute_saliency的向量相关性、轮次衰减参数和批量重算"
+      ],
+      "limitations": [
+        "已读念头池是内存列表，不是跨重启持久状态",
+        "selected表示选作表达，不证明实际行为已完成",
+        "主要服务于对话参与，不包含我们的完整尝试反馈与人格变更闭环",
+        "decay_factor默认1，不应宣称默认自动衰减",
+        "构造函数可同步计算Embedding，移植时需要异步网关与缓存"
+      ],
+      "source_files": [
+        {
+          "path": "thoughtful_agents/models/thought.py",
+          "url": "https://github.com/xybruceliu/thoughtful-agents/blob/4c8d5beb249f852465463ed236fbbff95e0b6b0d/thoughtful_agents/models/thought.py",
+          "downloaded_text_sha256": "0e744077243c86f64387387f5c05841be8ad73a064d9444118d01dedb3d5a3e1"
+        },
+        {
+          "path": "thoughtful_agents/models/mental_object.py",
+          "url": "https://github.com/xybruceliu/thoughtful-agents/blob/4c8d5beb249f852465463ed236fbbff95e0b6b0d/thoughtful_agents/models/mental_object.py",
+          "downloaded_text_sha256": "4819b691067b28a085a09fc01cac407b41675d1768793712031a00d105eb193e"
+        },
+        {
+          "path": "thoughtful_agents/utils/saliency.py",
+          "url": "https://github.com/xybruceliu/thoughtful-agents/blob/4c8d5beb249f852465463ed236fbbff95e0b6b0d/thoughtful_agents/utils/saliency.py",
+          "downloaded_text_sha256": "ec0dbe6c1e5c91134c906f852f485b4adce740c85d3cde7b69eaed4c5ce09c18"
+        }
+      ]
+    }
+  ],
+  "official_documents": [
+    {
+      "title": "DeepSeek多轮对话",
+      "url": "https://api-docs.deepseek.com/guides/multi_round_chat/",
+      "scope": "无状态多轮调用，客户端组织历史",
+      "verified": true
+    },
+    {
+      "title": "DeepSeek思考模式",
+      "url": "https://api-docs.deepseek.com/guides/thinking_mode/",
+      "scope": "thinking、工具及reasoning_content协议要求",
+      "verified": true
+    },
+    {
+      "title": "DeepSeek工具调用",
+      "url": "https://api-docs.deepseek.com/guides/tool_calls/",
+      "scope": "实现时复核工具/JSON schema能力；本次直接打开超时，之前对话已查官方页面",
+      "verified": false
+    },
+    {
+      "title": "GraphRAG数据流",
+      "url": "https://microsoft.github.io/graphrag/index/default_dataflow/",
+      "scope": "实体关系→社区→报告及向量",
+      "verified": true
+    },
+    {
+      "title": "Python asyncio tasks",
+      "url": "https://docs.python.org/3.12/library/asyncio-task.html",
+      "scope": "后台任务组织参考",
+      "verified": true
+    },
+    {
+      "title": "Leiden算法接口",
+      "url": "https://leidenalg.readthedocs.io/en/stable/intro.html",
+      "scope": "候选依赖，不等于Windows已安装验证",
+      "verified": true
+    },
+    {
+      "title": "Proactive Conversational Agents with Inner Thoughts",
+      "url": "https://arxiv.org/abs/2501.00383",
+      "scope": "念头产生与表达分离，已读摘要与对应实现，不表示复现实验",
+      "verified": true
+    }
+  ],
+  "plan_version": "0.2",
+  "revision_note": "新增Thoughtful Agents与Ashley Emotional Echo临时状态源码参考；仍未安装、实现或发送消息"
+}

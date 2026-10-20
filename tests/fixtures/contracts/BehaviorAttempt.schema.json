@@ -1,0 +1,58 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "intent_ref": {
+      "title": "Intent Ref",
+      "type": "string"
+    },
+    "decision_status": {
+      "enum": [
+        "planned",
+        "draft",
+        "expressed",
+        "attempted",
+        "blocked",
+        "unknown"
+      ],
+      "title": "Decision Status",
+      "type": "string"
+    },
+    "action_refs": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Action Refs",
+      "type": "array"
+    },
+    "occurred_at": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Occurred At"
+    },
+    "observed_feedback_refs": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Observed Feedback Refs",
+      "type": "array"
+    },
+    "outcome_unknown": {
+      "default": true,
+      "title": "Outcome Unknown",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "intent_ref",
+    "decision_status"
+  ],
+  "title": "BehaviorAttempt",
+  "type": "object"
+}

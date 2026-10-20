@@ -1,0 +1,231 @@
+{
+  "audit_id": "AUDIT-MEM-01",
+  "date": "2026-10-20",
+  "timezone": "Asia/Shanghai",
+  "mode": "read-only source review plus offline synthetic reproduction",
+  "production_files_modified": false,
+  "paid_api_calls": 0,
+  "credentials_accessed": false,
+  "component_explanation": [
+    {
+      "component": "contracts",
+      "points": [
+        "Record pins id@revision; content_hash covers body+payload, not the complete metadata. Model-authored records require provider/model/prompt_version/run_id.",
+        "SourceSpan records exact Python string offsets and the verbatim quote. Generic Record validation is supplemented by commit-boundary existence/domain/role/span checks."
+      ],
+      "source": [
+        {
+          "file": "src/myatri/contracts/__init__.py",
+          "lines": [
+            45,
+            87
+          ]
+        },
+        {
+          "file": "src/myatri/storage/archive.py",
+          "lines": [
+            251,
+            268
+          ]
+        }
+      ]
+    },
+    {
+      "component": "storage",
+      "points": [
+        "Immutable content-addressed JSON files are published before a chained manifest; only published manifests are readable. A manifest is the atomic visibility boundary.",
+        "A root writer lock serializes threads/processes; expected revisions provide CAS; identical idempotency keys reject different contents.",
+        "SQLite/FTS is disposable and rebuilt from manifests; the separate runtime queue is not reconstructed from archive text."
+      ],
+      "source": [
+        {
+          "file": "src/myatri/storage/archive.py",
+          "lines": [
+            89,
+            125
+          ]
+        },
+        {
+          "file": "src/myatri/storage/archive.py",
+          "lines": [
+            183,
+            237
+          ]
+        },
+        {
+          "file": "src/myatri/storage/archive.py",
+          "lines": [
+            269,
+            326
+          ]
+        }
+      ]
+    },
+    {
+      "component": "memory",
+      "points": [
+        "Default real TF-IDF char1-4 fitting gives a corpus-specific space, exact cosine baseline, and saved vocabulary/idf; this is lexical embedding, not a neural semantic model.",
+        "Generations persist vectors/providers/graph/clusters/themes and switch current by atomic file replacement. Old generations allow rollback, although publication ordering has a confirmed race.",
+        "Only event roots become clustering nodes. Interpretation feelings can anchor to one event; raw messages/reflections/states do not become independent cluster events.",
+        "Real Leiden runs recursively at resolutions 0.5 and 1.25 with fixed seed; only positive similar edges are clustering weights. Soft theme memberships and provisional labels are separate from Leiden partitioning."
+      ],
+      "source": [
+        {
+          "file": "src/myatri/memory/embeddings.py",
+          "lines": [
+            17,
+            58
+          ]
+        },
+        {
+          "file": "src/myatri/memory/index.py",
+          "lines": [
+            105,
+            145
+          ]
+        },
+        {
+          "file": "src/myatri/memory/clustering.py",
+          "lines": [
+            12,
+            51
+          ]
+        }
+      ]
+    },
+    {
+      "component": "retrieval",
+      "points": [
+        "Chinese trigram FTS, archive lexical matches, vector views, explicit event time/person filters, and theme membership fuse through RRF.",
+        "Typed graph expansion adds sources/counterexamples. Exact quoted spans travel with raw messages; transitive audit logs can remain versioned pointers under budget.",
+        "Persona changes index rationale plus the explicit changed wording/diff; source refs and optional omitted logs remain readable. Historical index mismatch is reported but does not currently prevent future semantic-edge leakage."
+      ],
+      "source": [
+        {
+          "file": "src/myatri/retrieval/service.py",
+          "lines": [
+            83,
+            183
+          ]
+        },
+        {
+          "file": "src/myatri/retrieval/service.py",
+          "lines": [
+            198,
+            297
+          ]
+        },
+        {
+          "file": "src/myatri/memory/text.py",
+          "lines": [
+            10,
+            20
+          ]
+        }
+      ]
+    }
+  ],
+  "confirmed_findings": [
+    {
+      "id": "AUDIT-MEM-01-01",
+      "priority": "P1",
+      "title": "Historical snapshot recall uses semantic relations created after that snapshot",
+      "file": "src/myatri/retrieval/service.py",
+      "start_line": 169,
+      "end_line": 183,
+      "trigger": "Create two events and save snapshot S. Later commit a contradicts edge between those same events, rebuild current index, then recall at S.",
+      "actual": "The archive at S has zero edge records, but RecallBundle.counter_refs uses the later relation. Endpoint visibility and a watermark warning do not make the relation valid as of S.",
+      "expected": "Historical recall must use a compatible graph/theme generation or exclude relation records not current/visible at the requested snapshot.",
+      "impact": "The past is reinterpreted with a future model assertion, so as-of provenance is inconsistent. No cross-user leak was reproduced.",
+      "reproduction": "tests/audit_memory_consistency.py::test_historical_snapshot_must_not_use_future_semantic_edges",
+      "direction_only": "Gate graph/theme semantics by selected snapshot. Checking endpoint refs alone is insufficient; check the actual semantic edge record revision, or fall back when generations mismatch."
+    },
+    {
+      "id": "AUDIT-MEM-01-02",
+      "priority": "P2",
+      "title": "An older asynchronous index rebuild can overwrite a newer published current generation",
+      "file": "src/myatri/memory/index.py",
+      "start_line": 141,
+      "end_line": 145,
+      "trigger": "Pause an older rebuild at the real embed call. Commit a second record and finish a newer rebuild. Resume the old one.",
+      "actual": "The lock serializes file writes but does not validate snapshot order. Reopened current points to the older watermark and lacks second@1 vectors.",
+      "expected": "Normal publication should not regress current to an older archive watermark; intentional rollback is a separate API.",
+      "impact": "Committed records are safe, but newer vectors/themes are replaced by an older index until another rebuild. Current lexical fallback reduces data loss but does not restore the overwritten current pointer.",
+      "reproduction": "tests/audit_memory_consistency.py::test_slow_older_rebuild_must_not_regress_current_watermark",
+      "direction_only": "Under the publication writer lock compare current publication/archive sequence with the candidate and refuse an older normal publication. Preserve explicit rollback semantics."
+    }
+  ],
+  "observations": {
+    "historical_graph": {
+      "requested_snapshot": "cc8306330aee469095cca3573353b9f7",
+      "index_watermark": "8c0a71fcee6b405a99668aeb0162c0c4",
+      "edges_in_requested_snapshot": 0,
+      "actual_counter_refs": [
+        "a@1",
+        "b@1"
+      ],
+      "without_index_counter_refs": [],
+      "actual_record_refs": [
+        "a@1",
+        "raw_a@1",
+        "b@1",
+        "raw_b@1"
+      ],
+      "limitations": [
+        "本地 char-ngram TF-IDF 是词面向量基线，不是神经语义 Embedding；否定与跨话题语义能力有限。",
+        "群落主题仍为 provisional；算法占位标签不代表 A3 模型语义摘要已验证。",
+        "感受视角缺失时跳过并重新归一化可用视角权重；不会伪造感受。",
+        "索引水位与请求快照不一致；向量结果仅保留可见 revision，全文与时间/人物从请求快照回退。"
+      ]
+    },
+    "out_of_order_publish": {
+      "newer_watermark": "d37e27651be9477f889461f7c028b79d",
+      "actual_current_watermark": "109efd767a764f9990e066f5b709d9ed",
+      "archive_watermark": "d37e27651be9477f889461f7c028b79d",
+      "current_vector_refs": [
+        "first@1"
+      ],
+      "missing_newer_vector": true
+    }
+  },
+  "direct_reproductions": [
+    {
+      "test": "test_historical_snapshot_must_not_use_future_semantic_edges",
+      "outcome": "confirmed_assertion_failure"
+    },
+    {
+      "test": "test_slow_older_rebuild_must_not_regress_current_watermark",
+      "outcome": "confirmed_assertion_failure"
+    }
+  ],
+  "targeted_commands": [
+    {
+      "command": ".venv/Scripts/python.exe -m pytest tests/audit_memory_consistency.py -q -rx",
+      "result": "2 xfailed in 5.88s",
+      "interpretation": "Strict expected failures document two confirmed defects; these are not fixed/passing product checks."
+    },
+    {
+      "command": ".venv/Scripts/python.exe -m pytest tests/test_storage.py::test_event_span_exact_source_role_and_same_batch tests/test_storage.py::test_sources_isolation_and_paths tests/test_storage.py::test_atomic_batch_snapshot_and_rebuild tests/integration/test_commit_recovery.py::test_cross_process_cas_only_one_wins tests/integration/test_commit_recovery.py::test_process_death_releases_writer_and_recovers tests/test_memory.py::test_generation_restart_cache_real_leiden_and_rollback -q",
+      "result": "8 passed in 4.15s",
+      "interpretation": "Targeted real checks for original-source validation, domain isolation, disposable projection, Windows process CAS/crash recovery, true TF-IDF/Leiden, and index rollback."
+    }
+  ],
+  "limits_not_new_confirmed_defects": [
+    {
+      "point": "Hash checks detect accidental/tampered bytes when the recorded checksums disagree. They are not signatures against an attacker who can replace the full archive and recompute all hashes.",
+      "source": "src/myatri/storage/archive.py:126-170"
+    },
+    {
+      "point": "V1 reads scan immutable archives and every commit rewrites the projection. Exact vector/kNN baseline and full clustering rebuild are small-scale correctness baselines, not ANN or scalable incremental guarantees.",
+      "source": "src/myatri/storage/archive.py:126-170,299-312; src/myatri/memory/index.py:148-153; src/myatri/memory/graph.py:22-28"
+    },
+    {
+      "point": "theme_materials.time_span currently derives from record.created_at, not Event.occurred_at. Explain it as archive-record time unless the interface is changed; imported old events may all have the same creation day.",
+      "source": "src/myatri/memory/themes.py:88"
+    },
+    {
+      "point": "The audit did not call a model API or infer semantic quality from fixtures. TF-IDF/Leiden were real; concurrency scheduling was instrumented without replacing the underlying algorithms.",
+      "source": "tests/audit_memory_consistency.py"
+    }
+  ]
+}

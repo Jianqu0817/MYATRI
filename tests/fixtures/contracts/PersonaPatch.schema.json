@@ -1,0 +1,79 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "base_revision": {
+      "minimum": 1,
+      "title": "Base Revision",
+      "type": "integer"
+    },
+    "entry_id": {
+      "title": "Entry Id",
+      "type": "string"
+    },
+    "old_hash": {
+      "title": "Old Hash",
+      "type": "string"
+    },
+    "replacement": {
+      "minLength": 1,
+      "title": "Replacement",
+      "type": "string"
+    },
+    "rationale": {
+      "minLength": 1,
+      "title": "Rationale",
+      "type": "string"
+    },
+    "evidence_refs": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Evidence Refs",
+      "type": "array"
+    },
+    "counter_refs": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Counter Refs",
+      "type": "array"
+    },
+    "temporary_refs": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Temporary Refs",
+      "type": "array"
+    },
+    "attempt_refs": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Attempt Refs",
+      "type": "array"
+    },
+    "counter_search_refs": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Counter Search Refs",
+      "type": "array"
+    },
+    "scope": {
+      "default": "共同安排",
+      "title": "Scope",
+      "type": "string"
+    }
+  },
+  "required": [
+    "base_revision",
+    "entry_id",
+    "old_hash",
+    "replacement",
+    "rationale",
+    "evidence_refs"
+  ],
+  "title": "PersonaPatch",
+  "type": "object"
+}

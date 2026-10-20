@@ -1,0 +1,27 @@
+{
+  "version": "0.1.1",
+  "artifacts": {
+    "myatri-0.1.1-py3-none-any.whl": {
+      "sha256": "f0966c0364030e4fd258185412e03e763bbdff644d6a458c35008bab0b19d914",
+      "members": 73,
+      "bytes": 122405
+    },
+    "myatri-0.1.1.tar.gz": {
+      "sha256": "9430501730a1d487c200aca6c896be2e2dfbf1bb6165b5774ffaf57418ac043d",
+      "members": 260,
+      "bytes": 614562
+    }
+  },
+  "local_config_packaged": false,
+  "repair_scratch_packaged": false,
+  "self_referential_report_packaged": false,
+  "wheel_installed_without_new_dependencies": true,
+  "external_cwd": "C:/Windows/Temp",
+  "new_attribution_prompt_packaged": true,
+  "offline_chat_compaction_doctor_passed": true,
+  "paid_calls": 0,
+  "credentials_read": false,
+  "normal_full_regression": "reports/fix_final_regression.xml",
+  "final_targeted_regression": "reports/fix_attribution_verified.xml",
+  "package_security_regression": "reports/fix_package_security.xml"
+}

@@ -1,0 +1,1069 @@
+{
+  "schema_version": "1.0",
+  "project": "MYATRI",
+  "plan_version": "0.3",
+  "created_date": "2026-10-19",
+  "timezone": "Asia/Shanghai",
+  "status": "persistence_repairs_offline_verified_semantic_pending",
+  "execution_gate": "用户2026-10-20追加授权官方DeepSeek-V4.1-Flash小规模测试与Windows安全凭据存储；真实消息与外部部署仍未授权且未执行。",
+  "authority": "01_工程规划书.md规定语义，本文给出排程。发生冲突先同步文档再实施。",
+  "tasks": [
+    {
+      "id": "T00",
+      "phase": "P0",
+      "title": "工程审计与来源登记",
+      "depends_on": [],
+      "status": "completed_local",
+      "outputs": [
+        "reports/source_audit.md",
+        "THIRD_PARTY_NOTICES.md",
+        "LICENSES/",
+        "docs/adr/0001-scope.md"
+      ],
+      "actions": [
+        "核对现有文件、AGENTS.md及用户授权范围",
+        "核验锁定提交及复制片段许可证；不默认下载四套框架",
+        "区分源码观察、拟借鉴、实际移植和未运行能力"
+      ],
+      "acceptance": [
+        "参考项均有来源、许可证和采用方式",
+        "不覆盖既有用户文件；本阶段不进行付费调用"
+      ],
+      "completion_evidence": [
+        "reports/source_audit.md",
+        "reports/source_verification.json",
+        "THIRD_PARTY_NOTICES.md",
+        "docs/adr/0001-scope.md",
+        "reports/pytest_results.xml"
+      ],
+      "required_for_v1": true,
+      "validation_note": "本地实现/离线结构与实际本地算法已验；最新官方Flash协议smoke见reports/live_smoke.json，长期人格语义效果仍未验证。"
+    },
+    {
+      "id": "T01",
+      "phase": "P0",
+      "title": "依赖与服务适配试验",
+      "depends_on": [
+        "T00"
+      ],
+      "status": "completed_local",
+      "outputs": [
+        "pyproject.toml",
+        "依赖锁文件",
+        "docs/adr/0002-stack-and-models.md",
+        "reports/environment_smoke.md"
+      ],
+      "actions": [
+        "验证Python与Windows候选依赖",
+        "比较中文Embedding候选并登记空间信息；下载/付费范围服从用户后续指令",
+        "核对DeepSeek模型、工具、thinking与结构化结果能力",
+        "未获live配置时只执行离线试验并标记缺口"
+      ],
+      "acceptance": [
+        "锁文件来自实际解析验证，或明确标注尚未安装项",
+        "Embedding选择有中文/否定/情感相关测试依据",
+        "live未执行不标为成功"
+      ],
+      "completion_evidence": [
+        "uv.lock",
+        "pyproject.toml",
+        "reports/environment_smoke.json",
+        "reports/model_manifest.json",
+        "docs/adr/0002-stack-and-models.md",
+        "reports/pytest_results.xml",
+        "reports/live_smoke.json",
+        "reports/live_models.json",
+        "tests/test_credentials.py"
+      ],
+      "required_for_v1": true,
+      "validation_note": "本地实现/离线结构与实际本地算法已验；最新官方Flash协议smoke见reports/live_smoke.json，长期人格语义效果仍未验证。",
+      "live_verification": "official_flash_generation_json_tools_thinking_verified"
+    },
+    {
+      "id": "T02",
+      "phase": "P0",
+      "title": "契约与模块骨架",
+      "depends_on": [
+        "T00"
+      ],
+      "status": "implemented_repairs_verified",
+      "outputs": [
+        "src/myatri/contracts/",
+        "src/myatri/各模块骨架",
+        "docs/adr/0003-data-and-interfaces.md",
+        "tests/fixtures/contracts/"
+      ],
+      "actions": [
+        "定义事件、解释、向量、边、群落、主题、反思、状态、patch、任务和快照",
+        "定义八模块接口与生成信息",
+        "提供schema版本和隔离字段",
+        "加入TemporaryEntry、ActivationSnapshot、BehaviorAttempt；近期感受是兼容视图，不双写"
+      ],
+      "acceptance": [
+        "契约示例可解析且拒绝缺失来源/版本的非法更新",
+        "模块可用mock衔接；不存在运行数据与prompt耦合",
+        "自发念头可引用生成run/快照，不能伪造事件根"
+      ],
+      "completion_evidence": [
+        "src/myatri/contracts/__init__.py",
+        "tests/fixtures/contracts/Record.schema.json",
+        "docs/adr/0003-data-and-interfaces.md",
+        "reports/pytest_results.xml",
+        "reports/persistence_fixes_2026-10-20.md",
+        "reports/fix_final_regression.xml"
+      ],
+      "required_for_v1": true,
+      "validation_note": "审查修复已有普通回归证据；旧API协议smoke保留，新归因及长期语义尚未live验收。",
+      "status_before_component_audit": "completed_local",
+      "component_audit_findings": [
+        "A04"
+      ],
+      "component_audit_note": "实际实现保留；存在待修缺陷/集成缺口或边界，修复后需针对性重验。详见reports/component_review.md。",
+      "component_audit_resolution": {
+        "status": "repaired_offline_verified",
+        "findings": [
+          "A04"
+        ],
+        "report": "reports/persistence_fixes_2026-10-20.md",
+        "date": "2026-10-20"
+      }
+    },
+    {
+      "id": "T03",
+      "phase": "P1",
+      "title": "文本档案与提交恢复",
+      "depends_on": [
+        "T02"
+      ],
+      "status": "completed_local",
+      "outputs": [
+        "src/myatri/storage/",
+        "src/myatri/runtime/commit.py",
+        "tests/integration/test_commit_recovery.py"
+      ],
+      "actions": [
+        "实现不可变版本和manifest发布",
+        "实现SQLite规范化投影与水位",
+        "实现单写入、幂等、导入、重建与快照读取"
+      ],
+      "acceptance": [
+        "各崩溃点可恢复；无半份人格与重复提交",
+        "索引投影删除后可从档案重建",
+        "人工导入新版本不覆盖旧来源"
+      ],
+      "completion_evidence": [
+        "src/myatri/storage/archive.py",
+        "src/myatri/runtime/commit.py",
+        "tests/integration/test_commit_recovery.py",
+        "reports/pytest_results.xml"
+      ],
+      "required_for_v1": true,
+      "validation_note": "本地实现/离线结构与实际本地算法已验；最新官方Flash协议smoke见reports/live_smoke.json，长期人格语义效果仍未验证。"
+    },
+    {
+      "id": "T04",
+      "phase": "P1",
+      "title": "模型与Embedding网关",
+      "depends_on": [
+        "T01",
+        "T02"
+      ],
+      "status": "implemented_repairs_verified",
+      "outputs": [
+        "src/myatri/providers/",
+        "config/defaults.toml",
+        "tests/fixtures/provider_protocol/"
+      ],
+      "actions": [
+        "生成与向量接口分离",
+        "实现tool roundtrip、结构化结果校验、超时、限流、截断检测",
+        "保存provider必要协议字段、用途、usage和prompt版本",
+        "提供离线fixture provider与显式live模式"
+      ],
+      "acceptance": [
+        "模型错误不提交空分析冒充成功",
+        "维度/空间不符可拒绝",
+        "DeepSeek live smoke仅在配置与付费范围具备时运行并单列结果"
+      ],
+      "completion_evidence": [
+        "src/myatri/providers/gateway.py",
+        "src/myatri/providers/local_onnx.py",
+        "tests/test_gateway.py",
+        "tests/test_protocol_recovery.py",
+        "reports/pytest_results.xml",
+        "reports/live_smoke.json",
+        "reports/live_models.json",
+        "tests/test_credentials.py",
+        "reports/persistence_fixes_2026-10-20.md",
+        "reports/fix_final_regression.xml"
+      ],
+      "required_for_v1": true,
+      "validation_note": "审查修复已有普通回归证据；旧API协议smoke保留，新归因及长期语义尚未live验收。",
+      "live_verification": "official_flash_generation_json_tools_thinking_verified",
+      "status_before_component_audit": "completed_local",
+      "component_audit_findings": [
+        "A07"
+      ],
+      "component_audit_note": "实际实现保留；存在待修缺陷/集成缺口或边界，修复后需针对性重验。详见reports/component_review.md。",
+      "component_audit_resolution": {
+        "status": "repaired_offline_verified",
+        "findings": [
+          "A07"
+        ],
+        "report": "reports/persistence_fixes_2026-10-20.md",
+        "date": "2026-10-20"
+      }
+    },
+    {
+      "id": "T05",
+      "phase": "P1",
+      "title": "持久队列与后台worker",
+      "depends_on": [
+        "T03",
+        "T04"
+      ],
+      "status": "completed_local",
+      "outputs": [
+        "src/myatri/runtime/jobs.py",
+        "src/myatri/runtime/worker.py",
+        "tests/integration/test_job_recovery.py"
+      ],
+      "actions": [
+        "实现任务幂等键、租约、优先级、结果落盘和重启接续",
+        "前台与后台调用额度分开",
+        "API等待时释放数据库写锁"
+      ],
+      "acceptance": [
+        "重复投递不产生重复逻辑更新",
+        "worker崩溃后租约可恢复",
+        "长模型任务不阻塞消息接收"
+      ],
+      "completion_evidence": [
+        "src/myatri/runtime/jobs.py",
+        "src/myatri/runtime/worker.py",
+        "tests/test_jobs.py",
+        "reports/pytest_results.xml"
+      ],
+      "required_for_v1": true,
+      "validation_note": "本地实现/离线结构与实际本地算法已验；最新官方Flash协议smoke见reports/live_smoke.json，长期人格语义效果仍未验证。"
+    },
+    {
+      "id": "T06",
+      "phase": "P2",
+      "title": "经历整理与原文追踪",
+      "depends_on": [
+        "T03",
+        "T04",
+        "T05"
+      ],
+      "status": "completed_local",
+      "outputs": [
+        "src/myatri/cognition/experience.py",
+        "prompts/experience/v1.md",
+        "tests/scenarios/experience/"
+      ],
+      "actions": [
+        "实现A1、事件指纹和歧义合并",
+        "区分事件、主观解释、转述、虚构及角色输出",
+        "保留原始来源片段和未处理水位"
+      ],
+      "acceptance": [
+        "同一事件十次重提仍只有一个事件根",
+        "真实后续事件不被误并",
+        "生成解释不覆盖原始经历"
+      ],
+      "completion_evidence": [
+        "src/myatri/cognition/experience.py",
+        "tests/test_experience.py",
+        "prompts/experience/v1.md",
+        "reports/pytest_results.xml"
+      ],
+      "required_for_v1": true,
+      "validation_note": "本地实现/离线结构与实际本地算法已验；最新官方Flash协议smoke见reports/live_smoke.json，长期人格语义效果仍未验证。"
+    },
+    {
+      "id": "T07",
+      "phase": "P2",
+      "title": "向量与双层记忆图",
+      "depends_on": [
+        "T06"
+      ],
+      "status": "implemented_repairs_verified",
+      "outputs": [
+        "src/myatri/memory/embeddings.py",
+        "src/myatri/memory/vector_index.py",
+        "src/myatri/memory/graph.py",
+        "prompts/association/v1.md"
+      ],
+      "actions": [
+        "实现单视角精确检索基线、space和缓存",
+        "实现kNN稀疏相似图及A2语义关系提案",
+        "实现事件/感受多视角与缺失策略",
+        "实现索引generation发布和滞后回退",
+        "临时状态独立view向量与版本失效；激活结果不计为经历"
+      ],
+      "acceptance": [
+        "不同space不混查；模型迁移可回退",
+        "相似与支持/反驳关系不混同",
+        "独立事件根可追溯；无全库逐对LLM调用"
+      ],
+      "completion_evidence": [
+        "src/myatri/memory/index.py",
+        "src/myatri/memory/graph.py",
+        "src/myatri/cognition/association.py",
+        "tests/test_neural.py",
+        "reports/pytest_results.xml",
+        "reports/persistence_fixes_2026-10-20.md",
+        "reports/fix_final_regression.xml"
+      ],
+      "required_for_v1": true,
+      "validation_note": "审查修复已有普通回归证据；旧API协议smoke保留，新归因及长期语义尚未live验收。",
+      "status_before_component_audit": "completed_local",
+      "component_audit_findings": [
+        "M02"
+      ],
+      "component_audit_note": "实际实现保留；存在待修缺陷/集成缺口或边界，修复后需针对性重验。详见reports/component_review.md。",
+      "component_audit_resolution": {
+        "status": "repaired_offline_verified",
+        "findings": [
+          "M02"
+        ],
+        "report": "reports/persistence_fixes_2026-10-20.md",
+        "date": "2026-10-20"
+      }
+    },
+    {
+      "id": "T08",
+      "phase": "P2",
+      "title": "自动聚类与动态主题",
+      "depends_on": [
+        "T07"
+      ],
+      "status": "implemented_repairs_verified",
+      "outputs": [
+        "src/myatri/memory/clustering.py",
+        "src/myatri/memory/themes.py",
+        "prompts/theme/v1.md",
+        "reports/clustering_baseline.md"
+      ],
+      "actions": [
+        "实际运行Leiden候选并记录seed/参数/graph_generation",
+        "实现provisional群落、孤立节点和多分辨率层次",
+        "实现软主题归属、ID匹配、split/merge谱系",
+        "实现A3差量摘要与反例输入"
+      ],
+      "acceptance": [
+        "聚类来自算法运行，不是LLM手工分类冒充",
+        "不把Leiden分区描述为原生重叠",
+        "群落改变不直接更新人格",
+        "小样本不足可保持暂定"
+      ],
+      "completion_evidence": [
+        "src/myatri/memory/clustering.py",
+        "src/myatri/memory/themes.py",
+        "src/myatri/cognition/theme.py",
+        "reports/clustering_baseline.md",
+        "reports/pytest_results.xml",
+        "reports/persistence_fixes_2026-10-20.md",
+        "reports/fix_final_regression.xml"
+      ],
+      "required_for_v1": true,
+      "validation_note": "审查修复已有普通回归证据；旧API协议smoke保留，新归因及长期语义尚未live验收。",
+      "status_before_component_audit": "completed_local",
+      "component_audit_findings": [
+        "M02",
+        "A01"
+      ],
+      "component_audit_note": "实际实现保留；存在待修缺陷/集成缺口或边界，修复后需针对性重验。详见reports/component_review.md。",
+      "component_audit_resolution": {
+        "status": "repaired_offline_verified",
+        "findings": [
+          "M02",
+          "A01"
+        ],
+        "report": "reports/persistence_fixes_2026-10-20.md",
+        "date": "2026-10-20"
+      }
+    },
+    {
+      "id": "T09",
+      "phase": "P2",
+      "title": "混合回忆与解释路径",
+      "depends_on": [
+        "T07",
+        "T08"
+      ],
+      "status": "implemented_repairs_verified",
+      "outputs": [
+        "src/myatri/retrieval/",
+        "prompts/recall/v1.md",
+        "tests/scenarios/recall/"
+      ],
+      "actions": [
+        "时间/人物、中文全文、向量、主题融合",
+        "按关系类型扩展图并检索反例",
+        "实现RecallBundle和原文读取",
+        "记录召回原因、水位与局限",
+        "支持召回历史念头、撤回原因和尝试反馈，区分当前与历史状态"
+      ],
+      "acceptance": [
+        "日期/否定/反转场景来源正确",
+        "原话均有原文支持",
+        "索引滞后有回退或显式说明",
+        "无跨用户/角色泄漏"
+      ],
+      "completion_evidence": [
+        "src/myatri/retrieval/service.py",
+        "tests/test_retrieval.py",
+        "reports/pytest_results.xml",
+        "reports/persistence_fixes_2026-10-20.md",
+        "reports/fix_final_regression.xml"
+      ],
+      "required_for_v1": true,
+      "validation_note": "审查修复已有普通回归证据；旧API协议smoke保留，新归因及长期语义尚未live验收。",
+      "status_before_component_audit": "completed_local",
+      "component_audit_findings": [
+        "M01"
+      ],
+      "component_audit_note": "实际实现保留；存在待修缺陷/集成缺口或边界，修复后需针对性重验。详见reports/component_review.md。",
+      "component_audit_resolution": {
+        "status": "repaired_offline_verified",
+        "findings": [
+          "M01"
+        ],
+        "report": "reports/persistence_fixes_2026-10-20.md",
+        "date": "2026-10-20"
+      }
+    },
+    {
+      "id": "T10",
+      "phase": "P3",
+      "title": "前台对话与初始状态",
+      "depends_on": [
+        "T09"
+      ],
+      "status": "implemented_repairs_verified",
+      "outputs": [
+        "src/myatri/conversation/",
+        "src/myatri/persona/state.py",
+        "src/myatri/interfaces/cli.py",
+        "config/persona_template.md"
+      ],
+      "actions": [
+        "固定快照组装人格、近期状态、关注、记忆和历史",
+        "实现有限步工具循环和前台回应",
+        "初始人格条目使用稳定ID",
+        "离线与live模式显式选择",
+        "按临时状态接口和fixture加入独立暂定状态区；完整生命周期在T12接入"
+      ],
+      "acceptance": [
+        "重启后身份和状态可恢复",
+        "工具结果与调用完整配对",
+        "后台完成更新后下一轮读取新快照",
+        "临时条目不成为强制命令或稳定人格"
+      ],
+      "completion_evidence": [
+        "src/myatri/conversation/engine.py",
+        "src/myatri/conversation/context.py",
+        "src/myatri/interfaces/cli.py",
+        "tests/integration/test_v1_lifecycle.py",
+        "reports/pytest_results.xml",
+        "reports/persistence_fixes_2026-10-20.md",
+        "reports/fix_final_regression.xml"
+      ],
+      "required_for_v1": true,
+      "validation_note": "审查修复已有普通回归证据；旧API协议smoke保留，新归因及长期语义尚未live验收。",
+      "status_before_component_audit": "completed_local",
+      "component_audit_findings": [
+        "A03"
+      ],
+      "component_audit_note": "实际实现保留；存在待修缺陷/集成缺口或边界，修复后需针对性重验。详见reports/component_review.md。",
+      "llm_context_upgrade": {
+        "status": "implemented_offline_and_short_live_verified",
+        "evidence": [
+          "reports/llm_context_upgrade.md",
+          "reports/live_context_smoke.json",
+          "reports/pytest_results.xml"
+        ],
+        "note": "前台/自动及手动压缩/状态选择接LLM；原始来源、预算、CAS、透明降级保留。此增强不关闭原有无关audit findings。"
+      },
+      "component_audit_resolution": {
+        "status": "repaired_offline_verified",
+        "findings": [
+          "A03"
+        ],
+        "report": "reports/persistence_fixes_2026-10-20.md",
+        "date": "2026-10-20"
+      }
+    },
+    {
+      "id": "T11",
+      "phase": "P3",
+      "title": "上下文自动与手动压缩",
+      "depends_on": [
+        "T10"
+      ],
+      "status": "implemented_repairs_verified",
+      "outputs": [
+        "src/myatri/conversation/compaction.py",
+        "src/myatri/conversation/budget.py",
+        "tests/scenarios/compaction/"
+      ],
+      "actions": [
+        "计算完整请求预算、输出预留和校准误差",
+        "实现保留事件/原话、来源摘要和快照恢复",
+        "人格更新使旧摘要/缓存失效",
+        "仅在完整工具协议边界压缩",
+        "压缩保留临时状态ID/版本，撤回后修订旧摘要与缓存"
+      ],
+      "acceptance": [
+        "压缩后未完成约定与来源可回查",
+        "不只递归缩写摘要",
+        "超限时可解释降级，不切断工具协议",
+        "手动与自动使用同一整理流程",
+        "已放弃条目不被旧摘要恢复为当前倾向"
+      ],
+      "completion_evidence": [
+        "src/myatri/conversation/compaction.py",
+        "src/myatri/conversation/budget.py",
+        "tests/test_context.py",
+        "reports/pytest_results.xml",
+        "reports/persistence_fixes_2026-10-20.md",
+        "reports/fix_final_regression.xml"
+      ],
+      "required_for_v1": true,
+      "validation_note": "审查修复已有普通回归证据；旧API协议smoke保留，新归因及长期语义尚未live验收。",
+      "status_before_component_audit": "completed_local",
+      "component_audit_findings": [
+        "A03"
+      ],
+      "component_audit_note": "实际实现保留；存在待修缺陷/集成缺口或边界，修复后需针对性重验。详见reports/component_review.md。",
+      "llm_context_upgrade": {
+        "status": "implemented_offline_and_short_live_verified",
+        "evidence": [
+          "reports/llm_context_upgrade.md",
+          "reports/live_context_smoke.json",
+          "reports/pytest_results.xml"
+        ],
+        "note": "前台/自动及手动压缩/状态选择接LLM；原始来源、预算、CAS、透明降级保留。此增强不关闭原有无关audit findings。"
+      },
+      "component_audit_resolution": {
+        "status": "repaired_offline_verified",
+        "findings": [
+          "A03"
+        ],
+        "report": "reports/persistence_fixes_2026-10-20.md",
+        "date": "2026-10-20"
+      }
+    },
+    {
+      "id": "T12",
+      "phase": "P3",
+      "title": "后台反思与临时状态生命周期",
+      "depends_on": [
+        "T08",
+        "T09",
+        "T05"
+      ],
+      "status": "implemented_repairs_verified",
+      "outputs": [
+        "src/myatri/cognition/reflection.py",
+        "src/myatri/persona/feelings.py",
+        "prompts/reflection/v1.md",
+        "src/myatri/persona/temporary.py",
+        "src/myatri/persona/activation.py",
+        "src/myatri/cognition/temporary_state.py",
+        "prompts/temporary_state/v1.md",
+        "tests/scenarios/temporary_state/"
+      ],
+      "actions": [
+        "实现A5反思与A8临时状态整理，近期感受映射为统一TemporaryEntry",
+        "参考Thoughtful Agents念头池与Ashley Emotional Echo，持久保存念头、余波、暂定意图和未决问题",
+        "语义候选与有限预算决定按情境激活，允许矛盾念头并存；不强制每轮新增模型调用",
+        "实现open/paused/settled/discarded/consolidated与本轮foreground/background分离",
+        "记录实际表达/实践及反馈；依据反馈维持、缩小范围、暂缓或放弃",
+        "同证据集去重，时限只触发复查；自发兴趣标记generated_idea，不制造外部经历"
+      ],
+      "acceptance": [
+        "重启和压缩后条目可恢复，近期感受不出现双写冲突",
+        "相关话题可激活背景念头；未入选不当作放弃，入选不当作实践",
+        "计划、草稿、表达、行动与回应各有明确状态和来源",
+        "撤回后下一轮及旧摘要不继续注入；历史仍可回忆",
+        "没有实际行动来源不能标attempted，没有回复保持unknown",
+        "可以调整或放弃而不修改人格；时间/次数不自动resolved或consolidated",
+        "反思、激活和自发念头不增加独立外部事件根"
+      ],
+      "completion_evidence": [
+        "src/myatri/persona/temporary.py",
+        "src/myatri/persona/activation.py",
+        "src/myatri/cognition/reflection.py",
+        "src/myatri/cognition/temporary_state.py",
+        "tests/test_persona_lifecycle.py",
+        "reports/pytest_results.xml",
+        "reports/persistence_fixes_2026-10-20.md",
+        "reports/fix_final_regression.xml"
+      ],
+      "required_for_v1": true,
+      "validation_note": "审查修复已有普通回归证据；旧API协议smoke保留，新归因及长期语义尚未live验收。",
+      "status_before_component_audit": "completed_local",
+      "component_audit_findings": [
+        "A01",
+        "A05",
+        "A06"
+      ],
+      "component_audit_note": "实际实现保留；存在待修缺陷/集成缺口或边界，修复后需针对性重验。详见reports/component_review.md。",
+      "llm_context_upgrade": {
+        "status": "implemented_offline_and_short_live_verified",
+        "evidence": [
+          "reports/llm_context_upgrade.md",
+          "reports/live_context_smoke.json",
+          "reports/pytest_results.xml"
+        ],
+        "note": "前台/自动及手动压缩/状态选择接LLM；原始来源、预算、CAS、透明降级保留。此增强不关闭原有无关audit findings。"
+      },
+      "component_audit_resolution": {
+        "status": "repaired_offline_verified",
+        "findings": [
+          "A01",
+          "A05",
+          "A06"
+        ],
+        "report": "reports/persistence_fixes_2026-10-20.md",
+        "date": "2026-10-20"
+      }
+    },
+    {
+      "id": "T13",
+      "phase": "P4",
+      "title": "人格修订与变化回忆",
+      "depends_on": [
+        "T12",
+        "T10"
+      ],
+      "status": "implemented_repairs_verified",
+      "outputs": [
+        "src/myatri/cognition/persona_revision.py",
+        "src/myatri/cognition/reviewer.py",
+        "src/myatri/persona/patch.py",
+        "prompts/persona_revision/v1.md",
+        "prompts/reviewer/v1.md"
+      ],
+      "actions": [
+        "实现A6/A7、独立事件根和反例审查",
+        "实现最小条目patch、old_hash、版本冲突处理",
+        "一次逻辑提交人格版本、变化记录和状态修订",
+        "变化记录接入记忆图和回忆",
+        "人格提案读取临时状态版本、独立经历及实际尝试反馈；非所有念头必须巩固"
+      ],
+      "acceptance": [
+        "未涉及条目hash保持不变",
+        "过时patch不覆盖新状态",
+        "变化可追到事件；变化记录不自证",
+        "恢复旧人格创建新版本且保留过程",
+        "consolidated状态必须链接已提交PersonaChange；selected/expressed不等于实践成功"
+      ],
+      "completion_evidence": [
+        "src/myatri/persona/patch.py",
+        "src/myatri/cognition/persona_revision.py",
+        "src/myatri/cognition/reviewer.py",
+        "tests/test_human_persona.py",
+        "reports/demo_trace.json",
+        "reports/pytest_results.xml",
+        "reports/persistence_fixes_2026-10-20.md",
+        "reports/fix_final_regression.xml"
+      ],
+      "required_for_v1": true,
+      "validation_note": "审查修复已有普通回归证据；旧API协议smoke保留，新归因及长期语义尚未live验收。",
+      "status_before_component_audit": "completed_local",
+      "component_audit_findings": [
+        "A06"
+      ],
+      "component_audit_note": "实际实现保留；存在待修缺陷/集成缺口或边界，修复后需针对性重验。详见reports/component_review.md。",
+      "component_audit_resolution": {
+        "status": "repaired_offline_verified",
+        "findings": [
+          "A06"
+        ],
+        "report": "reports/persistence_fixes_2026-10-20.md",
+        "date": "2026-10-20"
+      }
+    },
+    {
+      "id": "T14",
+      "phase": "P4",
+      "title": "定时、空闲与夜间闭环",
+      "depends_on": [
+        "T11",
+        "T13"
+      ],
+      "status": "implemented_repairs_verified",
+      "outputs": [
+        "src/myatri/runtime/scheduler.py",
+        "config/schedules.toml",
+        "tests/scenarios/lifecycle/"
+      ],
+      "actions": [
+        "实现本地时区触发、输入水位和dirty检查",
+        "离线错过时段合并补做，不逐小时追跑",
+        "整合前台、后台、压缩与提交",
+        "保持主动联系和外部活动关闭",
+        "接入A8相关事件/空闲复查与激活失效；允许社交意图/草稿，但不调用真实发送"
+      ],
+      "acceptance": [
+        "虚拟时钟覆盖跨日和长空闲",
+        "同一材料不无限重复反思",
+        "关闭时无虚构活动，重启可接续",
+        "端到端合成案例通过",
+        "无对话时可复查未决状态，未获外联启用不能投递"
+      ],
+      "completion_evidence": [
+        "src/myatri/app.py",
+        "src/myatri/runtime/scheduler.py",
+        "config/schedules.toml",
+        "tests/integration/test_v1_lifecycle.py",
+        "reports/pytest_results.xml",
+        "reports/persistence_fixes_2026-10-20.md",
+        "reports/fix_final_regression.xml"
+      ],
+      "required_for_v1": true,
+      "validation_note": "审查修复已有普通回归证据；旧API协议smoke保留，新归因及长期语义尚未live验收。",
+      "status_before_component_audit": "completed_local",
+      "component_audit_findings": [
+        "A02",
+        "A04"
+      ],
+      "component_audit_note": "实际实现保留；存在待修缺陷/集成缺口或边界，修复后需针对性重验。详见reports/component_review.md。",
+      "component_audit_resolution": {
+        "status": "repaired_offline_verified",
+        "findings": [
+          "A02",
+          "A04"
+        ],
+        "report": "reports/persistence_fixes_2026-10-20.md",
+        "date": "2026-10-20"
+      }
+    },
+    {
+      "id": "T15",
+      "phase": "P5",
+      "title": "检查、运维与来源登记",
+      "depends_on": [
+        "T14"
+      ],
+      "status": "completed_local",
+      "outputs": [
+        "src/myatri/interfaces/inspect.py",
+        "docs/运行与恢复手册.md",
+        "THIRD_PARTY_NOTICES.md",
+        "reports/runtime_inspection.md"
+      ],
+      "actions": [
+        "提供记忆/图/主题/人格diff/任务/成本检查",
+        "实现doctor、备份与恢复到新目录",
+        "补齐实际移植来源和依赖许可",
+        "界面可先CLI，不强制图形产品",
+        "提供state list/inspect/dismiss及激活轨迹、尝试反馈和撤回检查"
+      ],
+      "acceptance": [
+        "不用开发调试器也能检查整条来源链",
+        "备份恢复保留档案、人格、队列状态",
+        "密钥不进入档案和版本库",
+        "可检查念头何时产生、为何激活、是否尝试、为何放弃"
+      ],
+      "completion_evidence": [
+        "src/myatri/interfaces/inspect.py",
+        "tests/test_inspection.py",
+        "docs/运行与恢复手册.md",
+        "reports/runtime_inspection.md",
+        "reports/dependency_licenses.json",
+        "reports/pytest_results.xml"
+      ],
+      "required_for_v1": true,
+      "validation_note": "本地实现/离线结构与实际本地算法已验；最新官方Flash协议smoke见reports/live_smoke.json，长期人格语义效果仍未验证。"
+    },
+    {
+      "id": "T16",
+      "phase": "P5",
+      "title": "基线、消融与live验证",
+      "depends_on": [
+        "T14"
+      ],
+      "status": "local_repairs_verified_semantic_pending",
+      "outputs": [
+        "evals/",
+        "reports/evaluation.md",
+        "reports/live_smoke.md"
+      ],
+      "actions": [
+        "准备开发集/留出集与人工允许关系",
+        "比较B0至B4及单/多视角表示",
+        "记录结构正确性、语义质量、成本、延迟",
+        "明确已完成与待配置的live能力",
+        "对比临时状态关闭、全部注入、按情境注入；覆盖矛盾念头、临时起意、余波、反馈撤回"
+      ],
+      "acceptance": [
+        "不靠LLM自评宣称人格成功",
+        "负结果保留，不能宣称图必然更好",
+        "来源/隔离/幂等硬约束无失败",
+        "live缺项有明确标记，不冒充全验收",
+        "临时状态带来的收益与干扰都报告，不假设越多越好"
+      ],
+      "completion_evidence": [
+        "src/myatri/evaluation.py",
+        "evals/corpus.json",
+        "evals/annotations.json",
+        "reports/evaluation.md",
+        "reports/evaluation.json",
+        "reports/live_smoke.md",
+        "reports/pytest_results.xml",
+        "reports/live_smoke.json",
+        "tests/test_secret_exclusion.py",
+        "reports/persistence_fixes_2026-10-20.md",
+        "reports/fix_final_regression.xml"
+      ],
+      "required_for_v1": true,
+      "validation_note": "审查修复已有普通回归证据；旧API协议smoke保留，新归因及长期语义尚未live验收。",
+      "live_verification": "protocol_verified_short_cognition_recovered_v2_longitudinal_pending",
+      "status_before_component_audit": "completed_local",
+      "component_audit_findings": [
+        "M01",
+        "M02",
+        "A01",
+        "A02",
+        "A03",
+        "A04",
+        "A05",
+        "A06",
+        "A07"
+      ],
+      "component_audit_note": "实际实现保留；存在待修缺陷/集成缺口或边界，修复后需针对性重验。详见reports/component_review.md。",
+      "llm_context_upgrade": {
+        "status": "implemented_offline_and_short_live_verified",
+        "evidence": [
+          "reports/llm_context_upgrade.md",
+          "reports/live_context_smoke.json",
+          "reports/pytest_results.xml"
+        ],
+        "note": "前台/自动及手动压缩/状态选择接LLM；原始来源、预算、CAS、透明降级保留。此增强不关闭原有无关audit findings。"
+      },
+      "component_audit_resolution": {
+        "status": "repaired_offline_verified",
+        "findings": [
+          "M01",
+          "M02",
+          "A01",
+          "A02",
+          "A03",
+          "A04",
+          "A05",
+          "A06",
+          "A07"
+        ],
+        "report": "reports/persistence_fixes_2026-10-20.md",
+        "date": "2026-10-20"
+      }
+    },
+    {
+      "id": "T17",
+      "phase": "P5",
+      "title": "最终交付与交接",
+      "depends_on": [
+        "T15",
+        "T16"
+      ],
+      "status": "local_repairs_verified_semantic_pending",
+      "outputs": [
+        "版本化可运行包",
+        "docs/交付与限制.md",
+        "reports/acceptance.md",
+        "更新后的任务状态"
+      ],
+      "actions": [
+        "完成实际依赖锁定、配置示例和启动指导",
+        "交付角色模板、prompt版本、fixture和评估",
+        "逐项核对R01-R13与关键验收",
+        "汇报已知限制及后续扩展边界"
+      ],
+      "acceptance": [
+        "八模块闭环和真实向量/聚类运行可演示",
+        "必要恢复/协议/并发检查有证据",
+        "付费live验证状态如实呈现；未完成则不标记完整live验收",
+        "没有擅自发布、外部活动或主动消息",
+        "交付持久临时状态和反馈生命周期；E01不启用不影响V1内部闭环验收"
+      ],
+      "completion_evidence": [
+        "dist/myatri-0.1.0-py3-none-any.whl",
+        "dist/myatri-0.1.0.tar.gz",
+        "docs/交付与限制.md",
+        "reports/acceptance.md",
+        "reports/demo_archive.zip",
+        "reports/pytest_results.xml",
+        "reports/live_smoke.json",
+        "tests/test_secret_exclusion.py",
+        "reports/persistence_fixes_2026-10-20.md",
+        "reports/fix_final_regression.xml"
+      ],
+      "required_for_v1": true,
+      "validation_note": "审查修复已有普通回归证据；旧API协议smoke保留，新归因及长期语义尚未live验收。",
+      "live_verification": "protocol_verified_short_cognition_recovered_v2_longitudinal_pending",
+      "status_before_component_audit": "completed_local",
+      "component_audit_findings": [
+        "M01",
+        "M02",
+        "A01",
+        "A02",
+        "A03",
+        "A04",
+        "A05",
+        "A06",
+        "A07"
+      ],
+      "component_audit_note": "实际实现保留；存在待修缺陷/集成缺口或边界，修复后需针对性重验。详见reports/component_review.md。",
+      "llm_context_upgrade": {
+        "status": "implemented_offline_and_short_live_verified",
+        "evidence": [
+          "reports/llm_context_upgrade.md",
+          "reports/live_context_smoke.json",
+          "reports/pytest_results.xml"
+        ],
+        "note": "前台/自动及手动压缩/状态选择接LLM；原始来源、预算、CAS、透明降级保留。此增强不关闭原有无关audit findings。"
+      },
+      "component_audit_resolution": {
+        "status": "repaired_offline_verified",
+        "findings": [
+          "M01",
+          "M02",
+          "A01",
+          "A02",
+          "A03",
+          "A04",
+          "A05",
+          "A06",
+          "A07"
+        ],
+        "report": "reports/persistence_fixes_2026-10-20.md",
+        "date": "2026-10-20"
+      }
+    }
+  ],
+  "optional_tasks": [
+    {
+      "id": "E01",
+      "phase": "extension",
+      "title": "主动交流渠道与投递闭环",
+      "depends_on": [
+        "T14",
+        "T15"
+      ],
+      "status": "planned_optional_disabled",
+      "required_for_v1": false,
+      "activation_gate": "用户后续明确启用并指定渠道、联系人范围和运行策略；本次文档修改未启用发送",
+      "outputs": [
+        "src/myatri/outreach/",
+        "src/myatri/interfaces/channels/",
+        "config/outreach.example.toml",
+        "tests/scenarios/outreach/",
+        "docs/主动交流配置.md"
+      ],
+      "actions": [
+        "区分用户本人、其他真实联系人和模拟Agent",
+        "实现社交意图→候选草稿→适宜性评估→策略→持久outbox→渠道→反馈",
+        "发送前复查意图是否撤回、用户是否已回来、话题是否已解决",
+        "配置联系人范围、渠道、可见范围、安静时段和去重/冷却",
+        "处理confirmed_sent/failed/unknown；渠道支持时使用服务端幂等",
+        "在明确授权与配置具备后才执行真实发送验证"
+      ],
+      "acceptance": [
+        "默认关闭时无任何真实外发",
+        "启用范围内可按策略自动执行，范围外不发送",
+        "撤回、过期和正在进行相同对话的候选能取消",
+        "超时unknown不盲目重发，不把草稿或未知结果记录为成功送达",
+        "不同联系人资料不会相互泄漏；模拟Agent对话不会无限递归"
+      ],
+      "completion_evidence": []
+    }
+  ],
+  "change_summary": [
+    "0.2新增临时状态池、语义激活、实际尝试反馈和放弃",
+    "新增A8；18项V1任务保持编号，E01为默认关闭的可选扩展"
+  ],
+  "updated_date": "2026-10-20",
+  "validation_levels": {
+    "interfaces": "implemented",
+    "offline_fixture": "passed",
+    "local_tfidf": "actually_run",
+    "local_bge_onnx": "actually_run_512_dimensions",
+    "leiden": "actually_run",
+    "deepseek_live": "official_flash_protocol_smoke_passed",
+    "real_cognitive_semantic_quality": "pending_live_and_longitudinal_review",
+    "real_outreach": "disabled_not_implemented"
+  },
+  "final_test_result": {
+    "tests": 178,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "seconds": 138.968,
+    "report": "reports/fix_final_regression.xml"
+  },
+  "component_audit": {
+    "date": "2026-10-20",
+    "report": "reports/component_review.md",
+    "normal_targeted_checks_passed": 27,
+    "strict_expected_failures_unfixed": 2,
+    "offline_probes_reproduced": 7,
+    "paid_calls_this_audit": 0,
+    "note": "历史80项通过与官方协议smoke仍为证据；不覆盖新发现。待用户核对组件行为与修改方向，生产逻辑本轮未改。"
+  },
+  "latest_change": {
+    "date": "2026-10-20",
+    "scope": [
+      "FIX-PERSIST-01"
+    ],
+    "status": "offline_verified",
+    "report": "reports/persistence_fixes_2026-10-20.md",
+    "normal_tests_passed": 178,
+    "new_official_requests": 0,
+    "note": "Historical live evidence is not validation of new attribution schema or long-term character quality."
+  },
+  "development_agent_policy": {
+    "updated_date": "2026-10-20",
+    "source": "latest explicit user authorization",
+    "default_subagents": 1,
+    "authorized_max_subagents": 4,
+    "recursive_delegation": false,
+    "note": "Independent task/file ownership required; actual concurrency follows available tool capacity. Overrides prior max2."
+  },
+  "persistence_repairs": {
+    "version": "0.1.1",
+    "date": "2026-10-20",
+    "report": "reports/persistence_fixes_2026-10-20.md",
+    "resolved": [
+      "CTX-01",
+      "M01",
+      "M02",
+      "R-MEM-03",
+      "R-MEM-04",
+      "R01",
+      "PERSONA-01",
+      "A01",
+      "A02",
+      "A04",
+      "A05",
+      "A06",
+      "A07"
+    ],
+    "previously_repaired": [
+      "A03"
+    ],
+    "paid_calls": 0,
+    "real_user_data_modified": false,
+    "pending": [
+      "new_attribution_live_semantics",
+      "longitudinal_character_quality",
+      "Entity/Skill/Procedure",
+      "BGE_long_text_chunks",
+      "incremental_index_scaling"
+    ]
+  }
+}

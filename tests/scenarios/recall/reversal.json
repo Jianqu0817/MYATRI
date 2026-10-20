@@ -1,0 +1,12 @@
+{
+  "description": "合成材料：取消、否定与后来重约必须保持时间及原文来源；不是现实人物资料。",
+  "events": [
+    {"id": "cancel", "date": "2026-09-01", "person": "小林", "text": "小林说这周末不能一起去海边散步，取消这次约定。"},
+    {"id": "renew", "date": "2026-10-01", "person": "小林", "text": "小林说上次取消不代表不想见面，现在重新约下周去海边散步。"},
+    {"id": "other", "date": "2026-10-01", "person": "小陈", "text": "小陈和我约好去山里骑车。"}
+  ],
+  "queries": [
+    {"query": "2026-09-01 小林海边散步", "required": ["cancel@1", "raw_cancel@1"], "excluded": ["renew@1", "other@1"]},
+    {"query": "小林取消海边散步以后呢", "required": ["cancel@1", "renew@1"], "counter_refs": ["cancel@1", "renew@1"]}
+  ]
+}

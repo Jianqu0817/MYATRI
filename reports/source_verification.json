@@ -1,0 +1,47 @@
+[
+  {
+    "repository": "agiresearch/A-mem",
+    "expected_commit": "ceffb860f0712bbae97b184d440df62bc910ca8d",
+    "copied_code": false,
+    "commit_verified": true,
+    "license": "MIT",
+    "license_path": "LICENSE",
+    "status": "verified"
+  },
+  {
+    "repository": "alpaim/ashley",
+    "expected_commit": "c2e0c0b5563773c80a5d2acc0c5fb007c04e4212",
+    "copied_code": false,
+    "commit_verified": true,
+    "license": "MIT",
+    "license_path": "LICENSE",
+    "status": "verified"
+  },
+  {
+    "repository": "microsoft/graphrag",
+    "expected_commit": "5faaaf4f5685fa2056fa8c3bf9342cb089f2942f",
+    "copied_code": false,
+    "commit_verified": true,
+    "license": "MIT",
+    "license_path": "LICENSE",
+    "status": "verified"
+  },
+  {
+    "repository": "getzep/graphiti",
+    "expected_commit": "7b0182f94d27075db488636cd5456981ee10b987",
+    "copied_code": false,
+    "commit_verified": true,
+    "license": "Apache-2.0",
+    "license_path": "LICENSE",
+    "status": "verified"
+  },
+  {
+    "repository": "xybruceliu/thoughtful-agents",
+    "expected_commit": "4c8d5beb249f852465463ed236fbbff95e0b6b0d",
+    "copied_code": false,
+    "commit_verified": true,
+    "license": "Apache-2.0",
+    "license_path": "LICENSE",
+    "status": "verified"
+  }
+]

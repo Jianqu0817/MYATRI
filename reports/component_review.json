@@ -1,0 +1,71 @@
+{
+  "mode": "offline-temporary-stores",
+  "paid_calls": 0,
+  "production_code_modified": false,
+  "findings": [
+    {
+      "id": "A01",
+      "confirmed": true,
+      "observation": {
+        "pending_theme": "t8",
+        "theme_jobs": 0
+      },
+      "method": "controlled branch input; no clustering claim"
+    },
+    {
+      "id": "A02",
+      "confirmed": true,
+      "observation": {
+        "reviews_after_new_evidence": 1,
+        "old_review_status": "succeeded",
+        "idle_rewrites_schedule_each_tick": true
+      },
+      "scope": "due-review key unchanged; ordinary new-event cycle can still review states"
+    },
+    {
+      "id": "A03",
+      "confirmed": true,
+      "observation": {
+        "event_recalled": true,
+        "reality_scope_in_recall_context": false
+      },
+      "scope": "model could use read_record; primary context projection omits typed payload"
+    },
+    {
+      "id": "A04",
+      "confirmed": true,
+      "observation": {
+        "contract_accepts_naive_review_at": true,
+        "background_due_comparison_raises_TypeError": true
+      }
+    },
+    {
+      "id": "A05",
+      "confirmed": true,
+      "observation": {
+        "assistant_persisted": "answer_talk@1",
+        "attempt_records": 0
+      },
+      "scope": "no assertion that this utterance automatically proves an action; missing attribution stage"
+    },
+    {
+      "id": "A06",
+      "confirmed": true,
+      "observation": {
+        "event_count": 28,
+        "reflection_budget_blocked": true,
+        "provider_requests": 0
+      },
+      "scope": "genuine request-size guard, no real model call or quality claim"
+    },
+    {
+      "id": "A07",
+      "confirmed": true,
+      "observation": {
+        "two_instances_charged_tokens": 1800,
+        "per_instance_daily_limit": 1100
+      },
+      "scope": "independent gateway instances; not a billing API experiment"
+    }
+  ]
+}

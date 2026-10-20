@@ -1,0 +1,29 @@
+[chat]
+endpoint = "https://api.deepseek.com"
+model = "deepseek-flash"
+allow_paid = false
+capabilities_verified = false
+
+[embedding]
+backend = "tfidf"
+# backend = "bge" 需 uv sync --extra neural 与显式下载模型
+# path = "var/models/bge-small-zh-v1.5"
+
+[budget]
+daily_tokens = 200000
+# 价格需依据实际供应商配置；0只表示未配置估价，不表示真实API免费
+input_per_million = 0.0
+output_per_million = 0.0
+
+[outreach]
+enabled = false
+
+[context]
+llm_compaction = true
+llm_activation = true
+
+[schedule]
+timezone = "Asia/Shanghai"
+period_hours = 3
+night_hour = 2
+idle_minutes = 90

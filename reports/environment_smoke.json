@@ -1,0 +1,20 @@
+{
+  "python": "3.12.7 | packaged by Anaconda, Inc. | (main, Oct  4 2024, 13:17:27) [MSC v.1929 64 bit (AMD64)]",
+  "sqlite": "3.45.3",
+  "packages": {
+    "pydantic": "2.14.1",
+    "numpy": "2.4.6",
+    "scipy": "1.15.3",
+    "igraph": "1.0.0",
+    "leidenalg": "0.12.0",
+    "scikit-learn": "1.9.1",
+    "pytest": "9.1.1",
+    "pytest-asyncio": "1.4.0",
+    "onnxruntime": "1.31.0",
+    "tokenizers": "0.23.3",
+    "httpx": "0.28.1",
+    "hatchling": "1.32.4"
+  },
+  "credential_backend": "Windows Credential Manager (standard ctypes; no third-party secret dependency)",
+  "paid_call_report": "reports/live_smoke.json"
+}

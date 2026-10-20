@@ -1,0 +1,106 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "record_id": {
+      "pattern": "^[A-Za-z0-9_-]{1,160}$",
+      "title": "Record Id",
+      "type": "string"
+    },
+    "revision": {
+      "default": 1,
+      "minimum": 1,
+      "title": "Revision",
+      "type": "integer"
+    },
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "record_kind": {
+      "title": "Record Kind",
+      "type": "string"
+    },
+    "agent_id": {
+      "default": "atri",
+      "minLength": 1,
+      "title": "Agent Id",
+      "type": "string"
+    },
+    "user_id": {
+      "default": "local",
+      "minLength": 1,
+      "title": "User Id",
+      "type": "string"
+    },
+    "created_at": {
+      "title": "Created At",
+      "type": "string"
+    },
+    "author_kind": {
+      "default": "system",
+      "enum": [
+        "human",
+        "system",
+        "model",
+        "human_import"
+      ],
+      "title": "Author Kind",
+      "type": "string"
+    },
+    "source_refs": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Source Refs",
+      "type": "array"
+    },
+    "supersedes_revision": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Supersedes Revision"
+    },
+    "generator": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Generator"
+    },
+    "body_markdown": {
+      "default": "",
+      "title": "Body Markdown",
+      "type": "string"
+    },
+    "payload": {
+      "additionalProperties": true,
+      "title": "Payload",
+      "type": "object"
+    },
+    "content_hash": {
+      "default": "",
+      "title": "Content Hash",
+      "type": "string"
+    }
+  },
+  "required": [
+    "record_id",
+    "record_kind"
+  ],
+  "title": "Record",
+  "type": "object"
+}

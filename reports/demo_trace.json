@@ -1,0 +1,62 @@
+{
+  "synthetic": true,
+  "model_mode": "scripted fixture; not DeepSeek",
+  "event_refs": [
+    "event_42d3690276e53119c06f4b6e@1",
+    "event_380b0159c6416948d7a4cc98@1",
+    "event_351246519a1d65607bf2d641@1",
+    "event_be76b5719717fbbf1f06b6d0@1"
+  ],
+  "roots_after_ten_rementions": 3,
+  "roots_after_activation": 3,
+  "final_event_roots": 4,
+  "active_before_action": [
+    "state_00d7dc74cbbc4e909adaef8a995ec1f3@1"
+  ],
+  "attempt_ref": "attempt_f99663aec0384c658d894240df4efd72@2",
+  "feedback_ref": "event_be76b5719717fbbf1f06b6d0@1",
+  "persona_before": "persona@1",
+  "persona_after": "persona@2",
+  "persona_diff": {
+    "P03": {
+      "before": "分歧时通常先迁就，不主动表达期待。",
+      "after": "仍愿意体谅对方，但共同安排中更愿意表达期待。"
+    }
+  },
+  "untouched_entry_hashes": {
+    "P01": true,
+    "P02": true
+  },
+  "state_status": "consolidated",
+  "discarded_status": "discarded",
+  "active_after_restart": [],
+  "recall_refs": [
+    "event_be76b5719717fbbf1f06b6d0@1",
+    "msg_E126@1",
+    "event_351246519a1d65607bf2d641@1",
+    "msg_E101@1",
+    "event_42d3690276e53119c06f4b6e@1",
+    "msg_E054@1",
+    "persona_change_a1b50cc7fdfe430e959dd7b51b717366@1",
+    "event_380b0159c6416948d7a4cc98@1",
+    "msg_E083@1",
+    "persona@1",
+    "state_00d7dc74cbbc4e909adaef8a995ec1f3@1",
+    "attempt_f99663aec0384c658d894240df4efd72@2",
+    "demo_expression@1",
+    "attempt_f99663aec0384c658d894240df4efd72@1"
+  ],
+  "doctor": {
+    "ok": true,
+    "issues": [],
+    "snapshot": "46d526934d3b475185a249e24e68856a",
+    "index_generation": "index_5017ec62b54347a2a6e595f258075762",
+    "index_watermark": "46d526934d3b475185a249e24e68856a",
+    "jobs": 0,
+    "live_verified": false,
+    "outreach_enabled": false,
+    "embedding": "local TF-IDF lexical baseline"
+  },
+  "paid_calls": 0,
+  "real_messages_sent": 0
+}

@@ -1,0 +1,98 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "text": {
+      "title": "Text",
+      "type": "string"
+    },
+    "kind_hint": {
+      "default": "thought",
+      "title": "Kind Hint",
+      "type": "string"
+    },
+    "scope": {
+      "default": "current conversation",
+      "title": "Scope",
+      "type": "string"
+    },
+    "origin_refs": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Origin Refs",
+      "type": "array"
+    },
+    "origin_kind": {
+      "default": "experience",
+      "enum": [
+        "experience",
+        "generated_idea"
+      ],
+      "title": "Origin Kind",
+      "type": "string"
+    },
+    "tentative": {
+      "default": true,
+      "title": "Tentative",
+      "type": "boolean"
+    },
+    "status": {
+      "default": "open",
+      "enum": [
+        "open",
+        "paused",
+        "settled",
+        "discarded",
+        "consolidated"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "review_at": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Review At"
+    },
+    "last_relevant_at": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Last Relevant At"
+    },
+    "reason": {
+      "default": "",
+      "title": "Reason",
+      "type": "string"
+    },
+    "persona_change_ref": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Persona Change Ref"
+    }
+  },
+  "required": [
+    "text"
+  ],
+  "title": "TemporaryEntry",
+  "type": "object"
+}

@@ -1,0 +1,14 @@
+{
+  "packages": {
+    "myatri-0.1.0-py3-none-any.whl": "844541a332ab46c809675282210d77d5558d43b66ca966d05a9ce8de91b8f4e9",
+    "myatri-0.1.0.tar.gz": "c087b651c6624c620eff6f8322613374712ecf428ea6a6754e704a618e0daacb"
+  },
+  "local_live_configuration_packaged": false,
+  "new_context_prompts_packaged": true,
+  "v2_prompt_packaged": true,
+  "independent_install_path": "D:\\DS_workspace\\MYATRI\\var\\package-check\\.venv\\Lib\\site-packages\\myatri\\__init__.py",
+  "outside_source_offline_context_doctor_ok": true,
+  "paid_calls_final": 15,
+  "new_context_live_calls": 2,
+  "credential_backend": "Windows Credential Manager; not read by package smoke"
+}

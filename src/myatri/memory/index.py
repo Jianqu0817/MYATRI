@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import asyncio
 import json
-from pathlib import Path
 import threading
 from typing import Any
 import uuid
@@ -290,7 +289,7 @@ class MemoryIndex:
             self._install(state, indexes=indexes, providers=providers)
 
     def query(self, text: str, view: str = "event", limit: int = 5, space_id: str | None = None,
-              *, _snapshot: dict | None = None) -> list[dict]:
+              *, _snapshot: dict | None = None, _allowed_refs: set[str] | None = None) -> list[dict]:
         installed = _snapshot if _snapshot is not None else self.capture_state()
         if view not in installed["indexes"]:
             if space_id is not None:
@@ -309,7 +308,7 @@ class MemoryIndex:
         metadata = index.rows[0]
         if (batch.model, batch.model_revision, batch.dimension, batch.normalization) != (metadata["model"], metadata["model_revision"], metadata["dimension"], metadata["normalization"]):
             raise ValueError("Query provider has migrated; rebuild or use the saved model revision")
-        return index.search(batch.vectors[0], space_id=batch.space_id, limit=limit)
+        return index.search(batch.vectors[0], space_id=batch.space_id, limit=limit, allowed_refs=_allowed_refs)
 
     async def aquery(self, text: str, view: str = "event", limit: int = 5, space_id: str | None = None) -> list[dict]:
         installed = self.capture_state()

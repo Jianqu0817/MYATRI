@@ -60,7 +60,8 @@ class Application:
                                input_per_million=budget.get("input_per_million", 0),
                                output_per_million=budget.get("output_per_million", 0))
         embedding = self.config.get("embedding") or self.queue.get_meta("embedding", {})
-        if embedding_provider is None and embedding.get("backend") == "bge":
+        if embedding_provider is None and (embedding.get("backend") == "bge" or
+                (embedding.get("backend") == "auto" and (Path(embedding.get("path", "")) / "manifest.json").is_file())):
             from myatri.providers.local_onnx import LocalOnnxEmbeddingProvider
             embedding_provider = LocalOnnxEmbeddingProvider(Path(embedding["path"]))
         self.index = MemoryIndex(self.store, embedding_provider)

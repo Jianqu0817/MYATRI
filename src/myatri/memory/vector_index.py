@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import numpy as np
+import heapq
 
 
 class ExactVectorIndex:
@@ -23,7 +24,8 @@ class ExactVectorIndex:
         self.matrix = np.divide(matrix, norms, out=np.zeros_like(matrix), where=norms != 0)
         self.rows = rows
 
-    def search(self, vector: list[float], *, space_id: str, limit: int = 5, exclude_ref: str | None = None) -> list[dict]:
+    def search(self, vector: list[float], *, space_id: str, limit: int = 5, exclude_ref: str | None = None,
+               allowed_refs: set[str] | None = None) -> list[dict]:
         if space_id != self.space_id or len(vector) != self.dimension:
             raise ValueError("Query vector space/dimension mismatch")
         query = np.asarray(vector, dtype=float)
@@ -33,6 +35,8 @@ class ExactVectorIndex:
         if norm == 0 or not self.rows or limit <= 0:
             return []
         scores = self.matrix @ (query / norm)
-        indices = sorted(range(len(scores)), key=lambda i: (-float(scores[i]), self.rows[i]["ref"]))
+        indices = heapq.nsmallest(limit, (i for i in range(len(scores)) if scores[i] > 0
+            and self.rows[i]["ref"] != exclude_ref and (allowed_refs is None or self.rows[i]["ref"] in allowed_refs)),
+            key=lambda i: (-float(scores[i]), self.rows[i]["ref"]))
         return [{"ref": self.rows[i]["ref"], "score": float(np.clip(scores[i], -1, 1)), "space_id": self.space_id,
                  "view": self.rows[i]["view"]} for i in indices if self.rows[i]["ref"] != exclude_ref and scores[i] > 0][:limit]

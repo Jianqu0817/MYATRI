@@ -8,7 +8,7 @@ from pathlib import Path
 
 import numpy as np
 
-from myatri.contracts import EmbeddingBatch, digest
+from myatri.contracts import EmbeddingBatch
 
 
 MODEL = "Xenova/bge-small-zh-v1.5"
@@ -29,7 +29,11 @@ class LocalOnnxEmbeddingProvider:
         self.tokenizer = Tokenizer.from_file(str(self.path / "tokenizer.json"))
         self.tokenizer.enable_truncation(max_length=512)
         self.tokenizer.enable_padding()
-        self.session = ort.InferenceSession(str(self.path / "model_quantized.onnx"), providers=["CPUExecutionProvider"])
+        options = ort.SessionOptions()
+        options.intra_op_num_threads = 2
+        options.inter_op_num_threads = 1
+        self.session = ort.InferenceSession(str(self.path / "model_quantized.onnx"), sess_options=options,
+                                           providers=["CPUExecutionProvider"])
         self.space_id = "bge-small-zh-v1_5-" + REVISION[:12] + "-int8-cls-l2"
         self.model, self.model_revision, self.dimension = MODEL, REVISION, 512
         self.normalization = "l2"

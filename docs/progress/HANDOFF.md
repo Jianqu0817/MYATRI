@@ -1,5 +1,9 @@
 # MYATRI HANDOFF
 
+## 最新 WECHATAGENT-01（2026-10-21）
+
+新项目D:/DS_workspace/MYATRI-AstrBot 0.1.1已参考sourcepro5/WeChatAgent实现本机读取/原生发送平台。发布包已校验并独立部署var/wechatagent-runtime，不要把匹配4.1.10.27的DLL复制到原4.1.15.13。用户已亲自登录；读取凭据DPAPI保存，真实账号与目标群已绑定，群友新消息可读取。29项检查和真实启动链通过，测试服务已停，微信保持登录；真实发送与付费回复未执行。日常直接双击新项目Start-WeChat-Live.cmd可显式启用模型；默认配置仍offline。不要重新迁移旧ATRI记忆或把本群全量历史导入原私聊库。配置/下载/二进制/凭据/诊断都在Git忽略范围，新增说明docs/WeChatAgent接入.md。此项目仍无E01主动社交。
+
 ## 最新 ASTRBOT-BRIDGE-01 2026年10月21日
 
 用户明确要求可行则新拉项目，并补旧修改文档。已在D:/DS_workspace/MYATRI-AstrBot创建独立Git项目，分支codex/astrbot-bridge，实际克隆AstrBot4.29.1 commit f2404c191716a64daaa422be7f3c567cace50d39；保持上游源码不改，用独立插件和本机HTTP后端桥接。MYATRI0.1.7冻结wheel进入vendor并锁哈希，未复制用户运行库/凭据；依赖与虚拟环境独立。原仓库本轮只补README、docs和进度。

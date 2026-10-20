@@ -1,0 +1,15 @@
+{
+  "version": "0.1.5",
+  "import_path": "D:\\DS_workspace\\MYATRI\\reports\\runtime_package_tmp_20261021\\installed\\myatri\\__init__.py",
+  "outside_source_tree": true,
+  "dialogue_turns": 10,
+  "complete_checkpoints": 1,
+  "raw_messages_after_restart": 20,
+  "timestamps_in_requests": true,
+  "identity_anchor_last": true,
+  "maintenance_turns": 30,
+  "deep_every_batches": 3,
+  "persona_every_batches": 6,
+  "doctor_ok": true,
+  "model_api_calls": 0
+}

@@ -1,0 +1,14 @@
+{
+  "original_byte_identical": true,
+  "original_sha256": "d245688a0ebda6bdedd1eeeae0c6962f8057290f7540ca548534bb5fb515e722",
+  "original_sections_preserved": 13,
+  "runtime_entries": 14,
+  "cmd_crlf": true,
+  "model_api_calls": 0,
+  "real_credential_reads": 0,
+  "user_library_modified": false,
+  "targeted_tests_passed": 11,
+  "powershell_syntax_ok": true,
+  "wheel_character_files_byte_identical": true,
+  "release_dist_rebuilt": false
+}

@@ -32,6 +32,7 @@ class Compactor:
             raise ValueError("invalid compaction material limits")
         self.chunk_bytes, self.max_chunks = chunk_bytes, max_chunks
         self._lock = asyncio.Lock()
+        self.before_compact = None
 
     def _prepare(self, snapshot, preserve_ids):
         raw = self.store.list_records("raw_message", snapshot=snapshot)
@@ -53,7 +54,7 @@ class Compactor:
         for record in raw:
             keep = record.ref in preserved
             text = record.body_markdown if keep else record.body_markdown[:160]
-            excerpts.append({"ref": record.ref, "role": record.payload["role"], "text": text,
+            excerpts.append({"ref": record.ref, "role": record.payload["role"], "created_at": record.created_at, "text": text,
                              "full_preserved": keep, "truncated": text != record.body_markdown})
         refs = [r.ref for r in raw]
         covered_refs = refs if covered_refs is None else covered_refs
@@ -101,7 +102,7 @@ class Compactor:
                 while end < len(record.body_markdown) and size + len(record.body_markdown[end].encode("utf-8")) <= self.chunk_bytes // 3:
                     size += len(record.body_markdown[end].encode("utf-8"))
                     end += 1
-                segment = {"ref": record.ref, "role": record.payload["role"], "start": start, "end": end,
+                segment = {"ref": record.ref, "role": record.payload["role"], "created_at": record.created_at, "start": start, "end": end,
                            "text": record.body_markdown[start:end]}
                 if batch and len(json.dumps([*batch, segment], ensure_ascii=False).encode("utf-8")) > self.chunk_bytes:
                     chunks.append(batch)
@@ -151,6 +152,9 @@ class Compactor:
         if protocol_messages is not None:
             validate_protocol(protocol_messages)
         async with self._lock:
+            if self.before_compact:
+                await self.before_compact()
+                snapshot = self.store.snapshot()
             snapshot = snapshot or self.store.snapshot()
             raw, preserved = self._prepare(snapshot, preserve_ids)
             if not raw:
@@ -178,7 +182,7 @@ class Compactor:
                     limitations.append(f"incremental_compaction_pending: processing {self.max_chunks}/{len(chunks)} remaining batches")
                 for chunk in chunks[:self.max_chunks]:
                     request = ModelRequest(role="compaction", purpose="context_compaction", prompt_version="compaction/v1",
-                        budget_tokens=32000, max_tokens=2048, output_schema=COMPACTION_SCHEMA,
+                        budget_tokens=max(32000, self.chunk_bytes + 12000), max_tokens=2048, output_schema=COMPACTION_SCHEMA,
                         messages=[{"role": "system", "content": load_prompt("compaction")},
                                   {"role": "user", "content": json.dumps(chunk, ensure_ascii=False)}])
                     response = await self.gateway.generate(request)

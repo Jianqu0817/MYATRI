@@ -1,0 +1,34 @@
+{
+  "version": "0.1.7",
+  "regression": {
+    "name": "pytest",
+    "errors": "0",
+    "failures": "0",
+    "skipped": "0",
+    "tests": "245",
+    "time": "163.642",
+    "timestamp": "2026-10-21T01:53:19.414029+08:00",
+    "hostname": "JianQu"
+  },
+  "targeted_passed": 29,
+  "fresh_wheel_outside_source_smoke": true,
+  "persisted_reply_chars": 72,
+  "provider_requests_fixture": 1,
+  "real_api_calls": 0,
+  "credential_reads": 0,
+  "artifacts": [
+    {
+      "name": "myatri-0.1.7-py3-none-any.whl",
+      "sha256": "d5b17a045eb459acd1e9fb7120bf16392b5d9816a19b943df43374e3110532de",
+      "private_paths_excluded": true,
+      "profile_card_source_bytes_match": true
+    },
+    {
+      "name": "myatri-0.1.7.tar.gz",
+      "sha256": "a011df7be3a66bb5a7a7360915fd34dadc2a52e0e74c4a15a44097d9b28bd80e",
+      "private_paths_excluded": true,
+      "profile_card_source_bytes_match": true
+    }
+  ],
+  "terminal_preview": "\n────────────────────────────────────────────────\n[小温暖]  2026-10-21 01:56:53\n  今天就陪你慢慢说话，不用把每句话都讲得那么周全。今天就陪你慢慢说话，不用把每句话都讲得那么周全。今天就陪你慢慢说话，不用把每句话都讲得那么周全。\n"
+}

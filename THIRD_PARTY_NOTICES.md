@@ -1,9 +1,12 @@
 # 第三方来源与许可登记
 
+0.1.3 新增 emotional-memory（MIT）的PAD回归、EMA、插值与距离局部改编，实际用于情绪状态投影。源码锁定8b84bf3725448f2545337c08e346434819c01628；完整许可为LICENSES/upstream/Emotional-Memory-LICENSE，改动与哈希见同目录manifest.json。未安装/接入其完整记忆系统。当前共三处上游改编，以下0.1.2说明保留历史含义。
+
 0.1.2 起包含两处有实际生产调用的上游代码改编：A-MEM 的有界关联邻居去重内核，以及 Letta Code 的完整快照原子写入内核。其余参考仍为方法借鉴。不是整套框架移植，也未安装这些框架。逐段来源、修改和校验记录见 [复用清单](LICENSES/upstream/manifest.json) 与 [本轮报告](reports/upstream_reuse_2026-10-20.md)；初次独立实现记录 reports/source_audit.md 为历史状态。
 
 | 项目 | 锁定提交 | 许可 | 采用方式 |
 |---|---|---|---|
+| gianlucamazza/emotional-memory | 8b84bf3725448f2545337c08e346434819c01628 | MIT | MoodField.regress/update与CoreAffect.lerp/distance局部改编；不采用存储与重复召回强化 |
 | agiresearch/A-mem | ceffb860f0712bbae97b184d440df62bc910ca8d | MIT | search_agentic 的关联邻居去重/限量展开局部改编；其余方法参考 |
 | letta-ai/letta-code | e8073d4e475ab7f56e76f9aaeea81a7618a92575 | Apache-2.0（保留完整上游 LICENSE） | writeAuthFile 的原子写入内核由 TypeScript 改编为 Python；不读取凭据 |
 | letta-ai/letta（archive） | 56ba9c25552605eec89de8ed3dc6394b625c1993 | Apache-2.0 | 已读旧 Python 上下文/协议/分块与 JSON 处理；未移植 |

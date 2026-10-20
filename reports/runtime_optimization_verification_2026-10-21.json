@@ -1,0 +1,20 @@
+{
+  "version": "0.1.5",
+  "full_regression": {
+    "name": "pytest",
+    "errors": "0",
+    "failures": "0",
+    "skipped": "0",
+    "tests": "237",
+    "time": "148.753",
+    "timestamp": "2026-10-21T01:08:15.465532+08:00",
+    "hostname": "JianQu"
+  },
+  "package_code_matches_final_source": true,
+  "wheel_and_sdist_private_path_check": true,
+  "source_card_byte_identical": true,
+  "ascii_crlf_launchers_in_source_package": true,
+  "model_api_calls": 0,
+  "real_credential_reads": 0,
+  "user_runtime_archives_modified_by_this_work": false
+}

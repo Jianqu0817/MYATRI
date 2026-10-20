@@ -1,0 +1,13 @@
+{
+  "wheel_import": "C:\\Users\\23668~1.JIA\\AppData\\Local\\Temp\\myatri-emotion-package-asu64he1\\installed\\myatri\\__init__.py",
+  "version": "0.1.3",
+  "offline_appraisal_restart_context_retraction_doctor": true,
+  "new_model_api_calls": 0,
+  "credentials_read": false,
+  "wheel": "myatri-0.1.3-py3-none-any.whl",
+  "sha256": "4421729c519e08485309926cdbccea733957ac9537dd05d290257b213ef2c1d1",
+  "isolated_target_installed": true,
+  "external_cwd": "C:\\Users\\23668~1.JIA\\AppData\\Local\\Temp\\myatri-emotion-package-asu64he1",
+  "cli_show_history_doctor": true,
+  "license_in_wheel": true
+}

@@ -43,12 +43,12 @@ def interrupted(path, data):
         if written == 2:
             os._exit(79)
 module._atomic_write = interrupted
-original_rebuild = store._rebuild
+original_rebuild = store._sync_projection
 def interrupted_projection(*args):
     original_rebuild(*args)
     if point == "projection":
         os._exit(79)
-store._rebuild = interrupted_projection
+store._sync_projection = interrupted_projection
 records = [Record(record_id="card", record_kind="persona_version"),
            Record(record_id="audit", record_kind="persona_change", source_refs=["card@1"])]
 store.commit(records, "atomic")

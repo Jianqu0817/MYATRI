@@ -1,0 +1,40 @@
+{
+  "full_cmd_check_only": {
+    "exit_code": 0,
+    "stdout": "[1/3] Checking the locked Python environment...\n[2/3] 检查角色库，已有记忆会继续保留。\r\n记忆目录：D:\\DS_workspace\\MYATRI\\var\\xiaowennuan\r\n检查通过：环境、配置、凭据、角色库均已就绪；没有调用模型 API。\r\n\r\nPress any key to continue . . . \r\n",
+    "stderr": "Checked 55 packages in 8ms\n"
+  },
+  "model_api_calls": 0,
+  "encoding_matrix_with_external_calls_stubbed": [
+    {
+      "launcher": "atri",
+      "initial_codepage": 936,
+      "chinese_space_path": true,
+      "exit_code": 0,
+      "arguments_verified": true
+    },
+    {
+      "launcher": "atri",
+      "initial_codepage": 65001,
+      "chinese_space_path": true,
+      "exit_code": 0,
+      "arguments_verified": true
+    },
+    {
+      "launcher": "xiaowennuan",
+      "initial_codepage": 936,
+      "chinese_space_path": true,
+      "exit_code": 0,
+      "arguments_verified": true
+    },
+    {
+      "launcher": "xiaowennuan",
+      "initial_codepage": 65001,
+      "chinese_space_path": true,
+      "exit_code": 0,
+      "arguments_verified": true
+    }
+  ],
+  "launcher_content": "ASCII with CRLF; full Windows PowerShell executable path",
+  "original_failure_reproduced": false
+}

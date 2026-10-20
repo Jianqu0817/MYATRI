@@ -62,7 +62,7 @@ class PersonaPatcher:
         persona = Record(record_id="persona", revision=current.revision+1, supersedes_revision=current.revision,
                          record_kind="persona_version", agent_id=self.store.agent_id, user_id=self.store.user_id,
                          source_refs=[current.ref, change_ref], body_markdown=PersonaState.render(entries),
-                         payload={"entries": entries, "entry_hashes": {k: digest(v) for k, v in entries.items()}, "change_ref": change_ref})
+                         payload={**current.payload, "entries": entries, "entry_hashes": {k: digest(v) for k, v in entries.items()}, "change_ref": change_ref})
         records = [change, persona]
         for ref in consolidate_refs or []:
             if ref not in patch.temporary_refs:
@@ -111,6 +111,31 @@ class PersonaPatcher:
         persona = Record(record_id="persona", revision=current.revision+1, supersedes_revision=current.revision,
                          record_kind="persona_version", agent_id=self.store.agent_id, user_id=self.store.user_id,
                          author_kind="human_import", source_refs=[current.ref, change.ref], body_markdown=PersonaState.render(entries),
-                         payload={"entries": entries, "entry_hashes": {k: digest(v) for k,v in entries.items()}, "change_ref": change.ref})
+                         payload={**current.payload, "entries": entries, "entry_hashes": {k: digest(v) for k,v in entries.items()}, "change_ref": change.ref})
         self.store.commit([change, persona], idempotency_key=change.record_id, expected={"persona": current.revision})
+        return persona
+
+    def human_replace(self, entries, reason):
+        """Explicit human-authorized full card edit; preserve archive lineage metadata."""
+        current = PersonaState(self.store).read_state()
+        if not entries or not reason.strip() or any(not value.strip() for value in entries.values()):
+            raise ValueError("human replacement requires nonempty entries and reason")
+        if entries == current.payload["entries"]:
+            raise ValueError("empty human replacement")
+        change = Record(record_id=uid("persona_change"), record_kind="persona_change",
+            agent_id=self.store.agent_id, user_id=self.store.user_id, author_kind="human_import",
+            source_refs=[current.ref], body_markdown=reason,
+            payload={"mode": "human_edit", "event_roots": [], "before_ref": current.ref,
+                "after_ref": f"persona@{current.revision+1}",
+                "diff": {key: {"before": current.payload["entries"].get(key), "after": entries.get(key)}
+                         for key in current.payload["entries"].keys() | entries.keys()
+                         if current.payload["entries"].get(key) != entries.get(key)}})
+        persona = Record(record_id="persona", revision=current.revision+1,
+            supersedes_revision=current.revision, record_kind="persona_version",
+            agent_id=self.store.agent_id, user_id=self.store.user_id, author_kind="human_import",
+            source_refs=[current.ref, change.ref], body_markdown=PersonaState.render(entries),
+            payload={**current.payload, "entries": entries,
+                     "entry_hashes": {key: digest(value) for key, value in entries.items()}, "change_ref": change.ref})
+        self.store.commit([change, persona], idempotency_key=change.record_id,
+                          expected={"persona": current.revision})
         return persona

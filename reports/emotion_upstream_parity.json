@@ -1,0 +1,14 @@
+{
+  "repository": "gianlucamazza/emotional-memory",
+  "commit": "8b84bf3725448f2545337c08e346434819c01628",
+  "cases": 250,
+  "comparisons": 1000,
+  "max_absolute_error": 2.220446049250313e-16,
+  "tolerance": 1e-12,
+  "passed": true,
+  "new_model_api_calls": 0,
+  "git_blob_sha256": {
+    "affect": "18582bbaf8997542ce94148c1e05762b3234056c8344194282515b59a52a41fa",
+    "mood": "091076cd601cacce5de6c5065c8c8982039b768d8a4718240d44d6deeae85e8f"
+  }
+}

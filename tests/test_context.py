@@ -80,7 +80,8 @@ def test_unfinished_tool_protocol_cannot_be_compacted(tmp_path):
 def test_sync_existing_summary_compacts_again_after_history_growth(tmp_path):
     store = ArchiveStore(tmp_path)
     PersonaState(store).initialize()
-    builder = ContextBuilder(store, RecallService(store), budget=TokenBudget(limit=11000, output_reserve=512, safety=512))
+    # Send-time labels and the server clock now consume fixed request space.
+    builder = ContextBuilder(store, RecallService(store), budget=TokenBudget(limit=12500, output_reserve=512, safety=512))
     summaries = []
     for cycle in range(3):
         for index in range(cycle * 20, (cycle + 1) * 20):

@@ -1,5 +1,77 @@
 # MYATRI HANDOFF
 
+## 最新 ASTRBOT-BRIDGE-01 2026年10月21日
+
+用户明确要求可行则新拉项目，并补旧修改文档。已在D:/DS_workspace/MYATRI-AstrBot创建独立Git项目，分支codex/astrbot-bridge，实际克隆AstrBot4.29.1 commit f2404c191716a64daaa422be7f3c567cace50d39；保持上游源码不改，用独立插件和本机HTTP后端桥接。MYATRI0.1.7冻结wheel进入vendor并锁哈希，未复制用户运行库/凭据；依赖与虚拟环境独立。原仓库本轮只补README、docs和进度。
+
+新桥接按平台实例/机器人/群隔离，入站JSON信封带成员ID/昵称/原时间/原文。群成员共享本群上下文，私聊及跨群记忆隔离；群身份认证依赖渠道稳定ID，不靠昵称映射为创造者。复用30/50/150/300频率、40—80正文、1M/650k；所有桥接群共享50M账本，原私聊另计。插件命中白名单先stop_event，避免内置LLM再调用。原子领取投递、未知结果不重发；sent只表示适配器send返回，不证明已读。
+
+新项目默认offline、空白名单、插件关闭。已装两套独立依赖，14项检查通过（含实际AstrBot事件/插件API到MYATRI的本地捕获发送联调），真实后端进程启动及鉴权健康检查通过；3页Word记录已渲染并逐页检查。证据见新项目docs/validation.xml与verification.json；未登录微信/真实API/真实消息。本机微信只读检测为Weixin4.1.15.13，适配器仍需兼容性实测。群聊适配器尚需按微信版本和稳定成员/消息ID选择，官方个人微信接口不能直接当微信群接通。E01自主社交闭环仍未实现，勿改原outreach开关冒充接通。
+
+旧修改集中写入docs/项目修改记录与当前配置_2026-10-21.md，并复制到新项目docs/MYATRI既有修改记录.md；另有Word版。下一步按用户提供微信版本和测试群配置连接，不重新迁移ATRI，不覆盖现有persona@5或私聊记录。
+
+## 最新 CHAT-PRESENTATION-01（2026-10-21，0.1.7）
+
+用户要求日常40—80字、减少追问/征求意见/邮件式周全表达、终端清楚区分双方。角色模板1.2改P00身份/来源、P07、P10、P12五项，保留原1.0 source和1.1补充原文；四个短聊天示例替换当前活跃示例。ReplyPolicy通过末尾system约束40—80字，非空白字符计数、标点计入；80字本地硬上限，优先完整句/分句，必要时省略号；不足40字不填充、不另调用模型。只处理最终非工具回复，工具JSON及结果不截断；已显示/入档/完整协议一致，provider实际usage不改。识别并移除前导ISO消息时间元数据，正文引用时间保留。512前台max_tokens，后台/650k压缩/30诊断/50维护/50M日额不变。
+
+CLI纯文本块分开[你]/[小温暖]/[系统]，用户输入后显示发送时间，助手头显示生成记录时间；不依赖ANSI。单条--message仍JSON协议。现有库先在线锁内备份var/backups/xiaowennuan-before-chat-1.2-20261021-015310.zip，再human_replace为persona@5；105条原话和全部490个既有revision未改，其他条目、P14与inherited_snapshot保持。使用统一writer/CAS，不终止正在进行的聊天。doctor通过、本地索引更新；私有报告var/diagnostics/chat_presentation_2026-10-21.json。代码需用户/quit重启；不要重新迁移记忆。0真实API、0凭据读取。定向29项已通过，完整回归与发行检查见同日chat_presentation报告。
+
+## 最新 STYLE-CADENCE-02（2026-10-21，0.1.6）
+
+用户给出更轻柔、灵动、文雅、含蓄狡黠的成年男娘表达参考及12例，要求频率10/30→30/50、每日50M。模板persona.md为角色卡1.1，改7个稳定条目（P00锚点/来源、P03/P06/P07/P10/P12），保存补充style_update_2026-10-21.md，原1.0 source.md未改。五项表达数值维持原用户确定值。现有库先备份var/backups/xiaowennuan-before-style-1.1-20261021-011849.zip，再human_replace为persona@4；83条原话和全部旧版本不变，继承边界/P14/其他9项条目保留。首尾提示都带新语气，doctor/索引通过。不要只改模板而忽略现有库。
+
+本机live与公开example/defaults已统一：诊断30轮、投影60次提交约30轮、记忆/情绪/状态50轮；既有3/6批倍率对应深度整理150轮、人格审阅300轮；daily_tokens=50000000。单次上下文1M/650k阈值、消息时间、原话即时保存不变。用户重启小温暖入口即可。5项角色/继承定向、12项虚构凭据打包检查通过，配置及12例完整性验证通过；没有新增真实API/凭据读取或后台调用。私有迁移报告var/diagnostics/style_1.1_cadence_budget_2026-10-21.json，公共检查reports/style_1.1_config_check_2026-10-21.json。版本/uv.lock已同步0.1.6，wheel/sdist与新角色/配置/排除内容已核对，SHA256SUMS-0.1.6.txt已保存。任务完成，无需重复付费测试或迁移。
+
+## 最新 RUNTIME-OPT-01（2026-10-21，0.1.5，已完成）
+
+用户授权降频并要求每轮带发送时间。新策略：原话即时保存，完整诊断每10轮、约20次提交增量投影；记忆/情绪/状态30轮，反思/关联/主题/归因90轮，180轮人格审阅；5秒空队列轮询。延后材料在runtime元数据持久积累，与cursor批次结束原子更新，压缩前即使没有新消息也补齐深度工作。未完成工具协议/用量仍即时保存，已完成协议只在10轮检查点保留全量。3份配置已同步，重启生效，日预算1M/压缩650k不变。
+
+本地读缓存按文件属性失效、深拷贝避免污染，doctor仍强制重新校验字节；档案仍权威，投影增量并可重建。消息上下文含UTC+8发送时间和当前服务端时间，材料/压缩窗口也带created_at，原始body不改。小温暖persona@3及继承记忆保留。237项完整离线回归（151.05s）+43项时间材料定向+12项打包排除通过；进程死亡测试已接增量投影路径。固定快照上下文中位5.0716→0.6679秒、原话提交0.8915→0.3625秒，报告runtime_optimization_benchmark_2026-10-21.json。0.1.5 wheel/sdist构建、源码外独立安装10轮smoke通过（只有1次完整协议，20条原话重启后完整，身份/时间/新频率/doctor正常），见runtime_optimization_package_2026-10-21.json。uv.lock已同步0.1.5。
+
+本轮0真实API/真实凭据读取，没有停用户聊天或写其档案；测试只写忽略的副本，用户重启启动小温暖.cmd即可。说明docs/运行开销优化_0.1.5.md。未实现流式输出或身份硬锁，真实长上下文与长期语义仍待验证，已知遗忘/召回缺口仍开放。不要重复迁移或付费核对。
+
+## 最新 IDENTITY-01（2026-10-21，身份修复已实测）
+
+用户“仍然加载ATRI角色卡”实际是语义身份被旧对话干扰：新卡已在真实API协议中，模型仍说ATRI/不认识小温暖。ContextBuilder将原继承snapshot内61条消息作为带来源的历史档案数据提供，不再用当前assistant角色回放；P00_current_identity在上下文首尾明确当前角色。原记录与承诺保留，历史错误自述须按当前卡纠正。新增PersonaPatcher.human_replace，人工/经验改卡保留inherited_snapshot。
+
+用户库先备份var/backups/xiaowennuan-before-identity-fix-20261021-004236.zip，后发布persona@3，现有67条原话/全部旧revision未变；模板15条，运行卡加P14继承说明为16条。本地索引/doctor通过，16项离线回归通过（reports/identity_context_fix_2026-10-21.xml）。仅1次官方live诊断、无自动重试/tools/后台执行，返回“我叫小温暖”并解释ATRI记忆继承；16188 tokens，诊断未写入聊天历史，仅用量入账。私有报告var/diagnostics/identity_context_fix_2026-10-21.json。用户重开启动小温暖.cmd即可；不要重跑付费检查或迁移，不将单次通过当成长期角色稳定保证。
+
+## 最新 LAUNCHER-02（2026-10-21，启动修复及实测完成）
+
+用户报hell.exe无法识别；两个CMD改为ASCII/CRLF、完整PowerShell路径，PS1新增Character xiaowennuan预设生成中文名，避免CMD中出现中文内容和切换代码页。小温暖预设仍为Root var/xiaowennuan、Agent atri，不影响已继承的记忆。实际完整CMD -CheckOnly成功（uv同步、凭据状态、现有库doctor），0模型请求；隔离模拟调用的936/65001与中文空格路径四组检查通过，参数正确；报告reports/launcher_encoding_fix_2026-10-21.json。原始报错未在隔离复现中稳定重现，勿编造已证实的底层截断原因。用户可关闭旧报错窗口重新双击。无须再开live验证或重做记忆迁移。
+
+## 最新 MEMORY-INHERIT-01（2026-10-21，已实际迁移）
+
+按用户明确请求，ATRI记忆已完整迁入此前不存在的var/xiaowennuan，旧var/myatri-main保留，并备份到var/backups/ATRI-before-inheritance-20261021-003032.zip。413个历史版本记录原样保留（61条消息、21事件、19情绪评价、19临时状态、8摘要等），队列/协议/用量随库继承；新增persona@2载入小温暖卡及P14继承来源，不改写历史姓名/原话。内部agent ID继续atri，CMD与文档均已同步；显示名/当前人格为小温暖。不要再使用--agent xiaowennuan打开此库，否则读到另一个隔离域；下文原先新库方案已由本迁移更新。
+
+scripts/inherit_atri_memory.py只允许新目标，先锁定/备份再恢复及版本化换卡；迁移与角色导入4项定向回归通过。实际doctor/SQLite校验通过，旧记录均未变，本地TF-IDF水位当前；迁移报告var/xiaowennuan/memory_inheritance.json。最终按CMD提取root/agent核对新入口，当前人格persona@2；741个备份档案文件与源文件字节一致，姓名/学校/兴趣/保留记忆查询均有候选结果（不证明真实模型回答质量）；live配置1M/650k/20轮生效。0模型API/凭据读取，未执行旧任务，也未自动启动live。今后继续用小温暖入口，新旧库后续独立保存。未修复之前已知的召回/忘记信息缺口。
+
+## 最新 CHARACTER-01（2026-10-21，角色卡导入完成）
+
+用户提供的小温暖1.0原文已保存在config/personas/xiaowennuan/source.md（与附件字节一致）；persona.md完整保留十三部分，按稳定ID分为13项并加P00来源/记忆边界。新增根目录启动小温暖.cmd，首次使用独立var/xiaowennuan、agent xiaowennuan初始化；沿用live.local.toml和Windows凭据，显示名“小温暖”。ATRI旧库/默认模板保留，不将旧对话迁移为新角色经历。启动器支持persona/agent/display-name参数，系统规则不再强制ATRI身份。
+
+11项定向离线检查、原文完整性、PowerShell语法、验证wheel内角色文件一致检查通过，证据reports/character_import_2026-10-21.xml/json。未读真实凭据、未调用API、未改用户运行库，也未实际开启新角色。身份稳定仍是角色约束而非新增硬锁；原卡五种记忆分类没有变成五套新引擎。用户双击新入口即可，不替其自动开live。角色卡修改只对新库初始化生效，已有库需persona edit版本化修改。打包清单已纳入角色文件和新CMD；验证wheel仅在reports/character_package_tmp_20261021，dist既有0.1.4未重发。
+
+## 最新 CADENCE-01（2026-10-21，0.1.4，离线验证完成）
+
+当前任务是用户授权的降频：live上下文1M/650k压缩软阈值，原话即时保存，20个成功用户/助手回合后合并记忆/情绪/反思/临时状态等；Compactor.before_compact先等待维护依赖，失败不先压缩。新增runtime/maintenance.py及A1/emotion批量入口，阶段checkpoint与游标持久化。llm_activation默认在产品配置中false；无需每轮API选状态。旧逐条任务迁移cancelled而非冒充已整理；运行库不直接改动，由用户重启加载新代码。legacy无配置Application仍沿用旧行为以兼容既有程序接口，使用live配置/默认配置文件启用新策略。
+
+已完成：完整227项回归通过（200.93s）+最后16项定向通过（60.20s），9个新用例覆盖轮数、原话即存、预压缩顺序、失败阻断、重启不重付费、旧任务取消、来源校验与用量锚定。uv.lock已离线同步0.1.4，wheel/sdist已构建并从源码外实际离线安装验证，报告reports/cadence_package_smoke_2026-10-21.json，详情docs/调用节奏与压缩策略.md。无新真实API/凭据读取/用户运行库写入，原聊天未被停止；用户重启即可加载，不要替其开启live。真实650k上下文/新batch语义尚未实测；临时验证码撤回及检索排序仍是后续开放项。维护协调锁当前限同一进程，不要另开付费worker与聊天并行跑维护。
+
+2026-10-20 最新预算：用户明确要求每日额度1000000 tokens，已更新本机live配置、公开live模板和一键启动初始化行为。不要恢复历史30000测试额度。现有用量记录保留；用户自行重启，无需替其启动付费进程。
+
+## 最新：Windows 一键启动（2026-10-20）
+
+用户可双击根目录启动MYATRI.cmd；自动uv sync --frozen --extra neural，调用scripts/start_myatri.py检查配置/Windows凭据/固定var/myatri-main，完整性正常后启动live聊天。提供的密钥已存Windows凭据并验证，文件与脚本无密钥。已有角色库不会被模板覆盖，锁位于库外防重复打开并兼容备份。自检命令：powershell -NoProfile -ExecutionPolicy Bypass -File scripts/start_myatri.ps1 -CheckOnly。实际CMD/PowerShell入口、中文空格路径、重复拦截、重启保留和持锁备份均通过，无新增模型请求或常驻进程。除非用户要求，不要自动启动付费聊天。用户以后只需双击；退出用/quit。
+
+## 最新 EMO-01（2026-10-20，0.1.3，离线工程验证完成）
+
+最终接续：本次已完成，不需继续开发或启动live。完整218项通过（154.85s）+最后26项定向通过（9.81s），上游1000次数值对照通过。0.1.3 wheel/sdist真实构建；源码目录外离线安装wheel验证评价/重启/上下文/撤回/doctor及CLI与许可哈希通过。证据见reports/emotion_{regression.xml,targeted.xml,upstream_parity.json,package_smoke.json}与根目录情绪模块开发.md。0次真实模型API/密钥读取/用户运行库改动，无新运行依赖。下方“最终验证中”过程说明仅保留历史；新prompt真实语义与长期质量尚未验证，不重跑既有付费smoke。
+
+用户授权GitHub复用后开发情绪模块，要求项目根目录情绪模块开发.md。代码已接通；详情读该文档及STATUS最新节。只复用emotional-memory的纯数学小内核；许可和哈希已登记，未装框架/新增依赖。上游1000次对照通过、初轮201项非打包回归通过；最终完整pytest正在运行（含26项情绪用例和新版许可测试）。需确认最终结果并完成源码目录外wheel smoke、文档最终结果与打包。当前无真实API或凭据读取，无用户运行库改动，无子Agent。不要因历史“T00规划”重做整个项目，也不要启动live验证。
+
+重要边界：后台评价通常下一轮生效；只读投影随配置重算，不是心理测量。v1同Event一条不可变评价、支持人工撤回及直接open/paused余波原子discard，不递归改后续解释/人格。`emotion appraise`沿用drain会处理同库其他到期任务；真实模式有额外预算内请求，本轮未执行。旧库不自动回填；纯fixture明确defer。可选心境重排默认关闭，只用于前台候选，不用于人格证据。
+
 ## 最新 REUSE-01（2026-10-20，0.1.2）
 
 用户要求真正复读 A-MEM / Letta 并移植现有功能中行为一致部分。生产已改为 `memory.graph` 调用 `_vendor.amem.iter_unique_neighbors`、`storage.archive._atomic_write` 委托 `_vendor.letta.atomic_write`；后者覆盖档案和索引发布。A-MEM只是8物理行的小内核，Letta只是通用文件写入；未装完整框架，不夸大成整套记忆/运行时接入。源码、许可证和哈希登记在 LICENSES/upstream/manifest.json，报告 reports/upstream_reuse_2026-10-20.md；wheel附带上游许可。A-MEM35/Letta38定向通过；完整192项回归通过（140.56s），wheel在源码外离线init/chat/compact/doctor通过，发行包上游许可/临时路径检查通过。旧未复制声明已加历史说明。无真实模型API调用/凭据读取/运行库修改。两个子Agent完成后由主Agent收尾，禁止递归派生。

@@ -13,11 +13,17 @@ class Worker:
         self.queue, self.handlers, self.apply_result = queue, handlers, apply_result
         self.owner, self.lease_seconds, self.max_attempts = uid("worker"), lease_seconds, max_attempts
         self.stopping = False
+        self.batch_policy = False
+        self.poll_seconds = 5
 
     async def run_once(self):
         job = self.queue.lease_job(self.owner, lease_seconds=self.lease_seconds)
         if not job:
             return False
+        spec = JobSpec.model_validate_json(job["payload"])
+        if self.batch_policy and job["role"] not in {"maintenance", "refresh_index"} and not spec.payload.get("manual"):
+            self.queue.finish(job["id"], self.owner, "cancelled", "superseded by turn-based maintenance; original messages retained")
+            return True
         async def heartbeat():
             while True:
                 await asyncio.sleep(self.lease_seconds / 3)
@@ -27,12 +33,13 @@ class Worker:
             if job["result"] is not None:
                 result = json.loads(job["result"])
             else:
-                spec = JobSpec.model_validate_json(job["payload"])
                 result = await self.handlers[job["role"]](spec)
                 self.queue.save_result(job["id"], self.owner, result)
             # Lease is checked again immediately before publishing saved results.
             self.queue.renew(job["id"], self.owner, self.lease_seconds)
             if self.apply_result:
+                if spec.payload.get("manual"):
+                    result = {**result, "manual": True}
                 await self.apply_result(result)
             self.queue.finish(job["id"], self.owner)
         except BudgetExceeded as exc:
@@ -60,4 +67,4 @@ class Worker:
     async def run(self):
         while not self.stopping:
             if not await self.run_once():
-                await asyncio.sleep(0.25)
+                await asyncio.sleep(self.poll_seconds)

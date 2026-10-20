@@ -237,6 +237,8 @@ class Gateway:
     async def generate(self, request: ModelRequest) -> ModelResponse:
         validate_protocol(request.messages)
         estimated = len(json.dumps(request.model_dump(mode="json"), ensure_ascii=False).encode("utf-8")) + request.max_tokens
+        if request.role == "foreground" and request.estimated_input_tokens is not None:
+            estimated = request.estimated_input_tokens + request.max_tokens
         if estimated > request.budget_tokens:
             raise BudgetExceeded("full request including tools/protocol exceeds token budget")
         # User-facing context preparation must not queue behind a long A5/A8

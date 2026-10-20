@@ -1,0 +1,28 @@
+{
+  "role_card_version": "1.1",
+  "entry_count": 15,
+  "all_twelve_examples_preserved": true,
+  "profiles": {
+    "defaults.toml": {
+      "daily_tokens": 50000000,
+      "diagnostic_turns": 30,
+      "memory_turns": 50
+    },
+    "live.example.toml": {
+      "daily_tokens": 50000000,
+      "diagnostic_turns": 30,
+      "memory_turns": 50
+    },
+    "live.local.toml": {
+      "daily_tokens": 50000000,
+      "diagnostic_turns": 30,
+      "memory_turns": 50
+    }
+  },
+  "targeted_tests_passed": 5,
+  "model_api_calls": 0,
+  "package_version": "0.1.6",
+  "wheel_and_sdist_verified": true,
+  "role_files_byte_identical": true,
+  "packaging_checks_passed": 12
+}

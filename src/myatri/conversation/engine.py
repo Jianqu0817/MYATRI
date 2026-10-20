@@ -28,6 +28,8 @@ class Conversation:
         self.max_steps, self.enable_tools = max_steps, enable_tools
         self.protocol_store = protocol_store
         self._lock = asyncio.Lock()
+        if protocol_store:
+            self.context.budget.anchor = protocol_store.get_meta("context_token_anchor")
 
     async def respond(self, text, *, message_id=None):
         async with self._lock:
@@ -44,19 +46,33 @@ class Conversation:
             if self.on_message:
                 self.on_message(raw)
             tools = TOOLS if self.enable_tools else []
+            completed = sum(1 for r in self.store.list_records("raw_message")
+                            if r.payload.get("role") == "assistant" and r.payload.get("reply_to"))
+            checkpoint = (completed + 1) % self.context.trace_every_turns == 0
             saved = self.protocol_store.get_protocol(raw.record_id) if self.protocol_store else None
             if saved and saved["status"] == "active":
                 messages, snapshot, start_step = saved["messages"], saved["snapshot"], saved["steps"]
                 validate_protocol(messages)
             else:
-                messages, snapshot = await self.context.abuild_context(text, tools=tools)
+                messages, snapshot = await self.context.abuild_context(text, tools=tools, persist_activation=checkpoint)
                 start_step = 0
             for step in range(start_step, self.max_steps):
+                reply_policy = self.context.reply_policy
+                output_tokens = self.context.budget.output_reserve
+                if reply_policy.maximum:
+                    output_tokens = min(output_tokens, reply_policy.max_tokens)
                 request = ModelRequest(messages=messages, tools=tools, role="foreground", purpose="conversation",
-                                       budget_tokens=self.context.budget.limit, max_tokens=self.context.budget.output_reserve)
+                                       budget_tokens=self.context.budget.limit, max_tokens=output_tokens,
+                                       estimated_input_tokens=self.context.budget.estimate(messages, tools))
                 self.context.budget.require(messages, tools)
                 response = await self.gateway.generate(request)
                 self.context.budget.calibrate(messages, response.usage, tools)
+                if self.protocol_store and checkpoint:
+                    self.protocol_store.set_meta("context_token_anchor", self.context.budget.anchor)
+                if not response.tool_calls:
+                    response = response.model_copy(update={"content": reply_policy.prepare(response.content)})
+                    if not response.content:
+                        raise ProviderError("empty reply after metadata removal; raw user message preserved")
                 messages.append(assistant_message(response))
                 if not response.tool_calls:
                     validate_protocol(messages)
@@ -64,8 +80,15 @@ class Conversation:
                         message_id="answer_" + raw.record_id, reply_to=raw.ref,
                         provider=response.provider, model=response.model, context_snapshot=snapshot)
                     if self.protocol_store:
-                        self.protocol_store.save_protocol(raw.record_id, {"status": "completed", "snapshot": snapshot,
-                            "steps": step+1, "messages": messages, "reply_ref": answer.ref})
+                        protocol = {"status": "completed", "snapshot": snapshot,
+                            "steps": step+1, "reply_ref": answer.ref, "sent_at": raw.created_at,
+                            "replied_at": answer.created_at, "full_checkpoint": checkpoint}
+                        if checkpoint:
+                            protocol["messages"] = messages
+                            protocol["context"] = self.context.explain_context()
+                        self.protocol_store.save_protocol(raw.record_id, protocol)
+                    if checkpoint:
+                        self.store.flush_projection()
                     if self.on_answer:
                         self.on_answer(answer)
                     return answer

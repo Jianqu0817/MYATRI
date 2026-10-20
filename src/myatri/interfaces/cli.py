@@ -5,12 +5,14 @@ import asyncio
 import json
 from pathlib import Path
 import sys
+from datetime import datetime
 
 from myatri.app import Application, load_config
 from myatri.contracts import JobSpec, Record
 from myatri.interfaces.inspect import backup, doctor, import_record, inspect_record, restore_backup
 from myatri.persona.patch import PersonaPatcher
 from myatri.providers import ProviderError
+from myatri.interfaces.terminal import chat_block, input_prompt, display_time
 
 
 def output(value):
@@ -31,6 +33,7 @@ def parser():
     chat.add_argument("--mode", choices=["offline", "live"], default="offline")
     chat.add_argument("--message")
     chat.add_argument("--message-id")
+    chat.add_argument("--display-name", help="聊天窗口中的角色名称；身份仍由持久化角色卡决定")
     worker = sub.add_parser("worker")
     worker.add_argument("--once", action="store_true")
     worker.add_argument("--mode", choices=["offline", "live"], default="offline")
@@ -64,6 +67,12 @@ def parser():
     sd = state.add_parser("dismiss"); sd.add_argument("id"); sd.add_argument("--reason", required=True)
     context = sub.add_parser("context")
     context.add_argument("--mode", choices=["offline", "live"], default="offline")
+    emotion = sub.add_parser("emotion").add_subparsers(dest="action", required=True)
+    es = emotion.add_parser("show"); es.add_argument("--at"); es.add_argument("--snapshot")
+    emotion.add_parser("history")
+    ea = emotion.add_parser("appraise"); ea.add_argument("event_ref")
+    ea.add_argument("--mode", choices=["offline", "live"], default="offline")
+    er = emotion.add_parser("dismiss"); er.add_argument("appraisal_ref"); er.add_argument("--reason", required=True)
     protocol = sub.add_parser("protocol"); protocol.add_argument("action", choices=["inspect"]); protocol.add_argument("turn_id")
     sub.add_parser("doctor")
     cost = sub.add_parser("cost"); cost.add_argument("action", choices=["inspect"], nargs="?", default="inspect")
@@ -107,7 +116,7 @@ async def run(args):
         try:
             while True:
                 try:
-                    text = await asyncio.to_thread(input, "你 > ")
+                    text = await asyncio.to_thread(input, input_prompt())
                 except EOFError:
                     break
                 if task.done():
@@ -116,14 +125,18 @@ async def run(args):
                 if text == "/quit":
                     break
                 if text == "/compact":
+                    print("\n[系统] 手动压缩结果：")
                     output(await app.conversation.context.compactor.acompact())
                     continue
                 if text.strip():
+                    sent_at = datetime.now(app.conversation.context.timezone).isoformat(timespec="seconds")
+                    print("  发送时间：" + display_time(sent_at))
                     try:
                         answer = await app.conversation.respond(text)
-                        print("ATRI > " + answer.body_markdown)
+                        print(chat_block(args.display_name or args.agent, answer.body_markdown,
+                                         app.conversation.context.message_time(answer)))
                     except ProviderError as exc:
-                        output({"error": str(exc), "raw_message_saved": True})
+                        print(chat_block("系统", "本轮未收到回复，已保留你发送的原话。\n" + str(exc), sent_at))
         finally:
             app.worker.stopping = True
             task.cancel()
@@ -131,6 +144,9 @@ async def run(args):
                 await task
             except asyncio.CancelledError:
                 pass
+            if app.conversation.context.budget.anchor:
+                app.queue.set_meta("context_token_anchor", app.conversation.context.budget.anchor)
+            app.store.flush_projection()
     elif command == "worker":
         app.recover_pending()
         if args.once:
@@ -167,7 +183,7 @@ async def run(args):
                 refs = [app.store.get_record(args.scope).ref]
         else:
             refs = [r.ref for r in events]
-        app.queue.enqueue(JobSpec(role="cycle", input_refs=refs))
+        app.queue.enqueue(JobSpec(role="cycle", input_refs=refs, payload={"manual": True}))
         output({"processed": await app.drain(), "jobs": app.queue.list_jobs()})
     elif command == "persona":
         if args.action == "show": output(app.persona.read_state())
@@ -197,6 +213,24 @@ async def run(args):
     elif command == "context":
         await app.conversation.context.abuild_context("当前关注")
         output(app.conversation.context.explain_context())
+    elif command == "emotion":
+        if args.action == "show":
+            from myatri.contracts import parse_timestamp
+            output(app.emotions.read(snapshot=args.snapshot, now=parse_timestamp(args.at) if args.at else None))
+        elif args.action == "history":
+            output([r.model_dump(mode="json") for r in app.store.list_records("emotion_appraisal")])
+        elif args.action == "dismiss":
+            proposal = app.emotions.propose_retraction(args.appraisal_ref, args.reason)
+            if proposal:
+                app.committer.submit_proposal(proposal)
+            output({"retracted": args.appraisal_ref, "state": app.emotions.read()})
+        else:
+            event = app.store.get_record(args.event_ref.split("@")[0],
+                revision=int(args.event_ref.split("@")[1]) if "@" in args.event_ref else None)
+            if event.record_kind != "event":
+                raise ValueError("emotion appraise requires an event")
+            job_id = app.queue.enqueue(JobSpec(role="emotion", input_refs=[event.ref], priority=40, payload={"manual": True}))
+            output({"job_id": job_id, "processed": await app.drain(), "state": app.emotions.read()})
     elif command == "protocol": output(app.queue.get_protocol(args.turn_id))
     elif command == "doctor": output(doctor(app))
     elif command == "cost": output(app.queue.usage())

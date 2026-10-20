@@ -111,6 +111,12 @@ def staged_distributions(tmp_path_factory):
         path = source / "config" / name
         if path.is_file():
             shutil.copyfile(path, staging / "config" / name)
+    # These explicit public role-card inputs are required by wheel force-include.
+    role_source = source / "config/personas/xiaowennuan"
+    role_target = staging / "config/personas/xiaowennuan"
+    role_target.mkdir(parents=True)
+    for name in ("persona.md", "source.md", "README.md", "style_update_2026-10-21.md"):
+        shutil.copyfile(role_source / name, role_target / name)
     sensitive = [*SENSITIVE_PATHS, "src/myatri/.env.hidden", "src/myatri/credentials.json",
                  "src/myatri/upper/CREDENTIALS.JSON", "src/myatri/private.PEM", "src/myatri/.ENV.LIVE",
                  "src/myatri/credentials.yaml", "src/myatri/upper/SECRETS.YML"]
@@ -137,21 +143,22 @@ def test_real_distribution_build_excludes_fabricated_credentials(staged_distribu
         assert any(name.endswith("myatri/credentials.py") for name in members)
     if staged_distributions["live_example"]:
         assert any(name.endswith("live.example.toml") for name in members)
-    # The two production-used upstream adaptations carry their original
+    # Production-used upstream adaptations carry their original
     # license texts in both source and binary distributions.
     import hashlib
     import json
     expected_licenses = {
         "A-MEM-LICENSE": "c8a51c83455b8afc3a11b085ce57c7b9b34c6725d6b2329ce3dd9a273f0add6d",
         "Letta-Code-LICENSE.txt": "036e78b9d7dd33ae5b378fdda973b4aad7901c8d8371a0ae40fae1f6659a89d0",
+        "Emotional-Memory-LICENSE": "babeb375e954b7970fd93aa970528f2b939c37c2abfb8265901667fd53e3f107",
     }
     prefix = "myatri/_vendor/upstream/" if kind == "wheel" else "LICENSES/upstream/"
     manifest = next(content for name, content in members.items() if name.endswith(prefix + "manifest.json"))
-    assert len(json.loads(manifest)["adaptations"]) == 2
+    assert len(json.loads(manifest)["adaptations"]) == 3
     for filename, digest in expected_licenses.items():
         content = next(content for name, content in members.items() if name.endswith(prefix + filename))
         assert hashlib.sha256(content).hexdigest() == digest
-    for filename in ("amem.py", "letta.py"):
+    for filename in ("amem.py", "letta.py", "emotional_memory.py"):
         assert any(name.endswith("myatri/_vendor/" + filename) for name in members)
 
 

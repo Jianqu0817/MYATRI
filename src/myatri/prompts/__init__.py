@@ -2,7 +2,7 @@ from pathlib import Path
 
 
 def load_prompt(role: str, version: str = "v1") -> str:
-    if role not in {"experience", "association", "theme", "recall", "reflection", "temporary_state", "persona_revision", "reviewer", "compaction", "activation", "attribution"}:
+    if role not in {"experience", "association", "theme", "recall", "reflection", "temporary_state", "persona_revision", "reviewer", "compaction", "activation", "attribution", "emotion"}:
         raise ValueError("unknown prompt role")
     import re
     if not re.fullmatch(r"v[1-9][0-9]*", version):

@@ -1,0 +1,14 @@
+{
+  "cadence_regression_2026-10-21.xml": {
+    "tests": 227,
+    "failures": 0,
+    "errors": 0
+  },
+  "cadence_targeted_2026-10-21.xml": {
+    "tests": 16,
+    "failures": 0,
+    "errors": 0
+  },
+  "new_real_api_calls": 0,
+  "user_runtime_modified": false
+}

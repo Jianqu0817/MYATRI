@@ -1,0 +1,40 @@
+{
+  "comparison": "Same frozen archive; baseline disables read cache and fully rebuilds projection per commit. Optimized uses verified cache and batched incremental projection.",
+  "baseline": {
+    "context_seconds": [
+      5.0952,
+      5.0716,
+      4.8216
+    ],
+    "context_median_seconds": 5.0716,
+    "append_seconds": [
+      0.8915,
+      0.7411,
+      0.9108
+    ],
+    "append_median_seconds": 0.8915,
+    "persona_ref": "persona@3",
+    "inherited_messages": 61
+  },
+  "optimized": {
+    "context_seconds": [
+      1.0536,
+      0.551,
+      0.6679
+    ],
+    "context_median_seconds": 0.6679,
+    "append_seconds": [
+      0.0533,
+      0.3661,
+      0.3625
+    ],
+    "append_median_seconds": 0.3625,
+    "persona_ref": "persona@3",
+    "inherited_messages": 61
+  },
+  "context_speedup": 7.59,
+  "append_speedup": 2.46,
+  "model_api_calls": 0,
+  "user_library_modified": false,
+  "synthetic_records_only_in_ignored_sandbox": true
+}

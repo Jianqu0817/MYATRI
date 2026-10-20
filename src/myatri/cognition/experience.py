@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import re
+from copy import deepcopy
 
 from myatri.contracts import Event, ModelRequest, Proposal, Record, SourceSpan, digest, uid
 from myatri.prompts import load_prompt
@@ -44,6 +45,96 @@ EXPERIENCE_SCHEMA = {
 class ExperienceOrganizer:
     def __init__(self, store, gateway):
         self.store, self.gateway = store, gateway
+
+    async def organize_batch(self, messages, commit, *, max_new_chunks=8):
+        """Extract many short turns in one bounded request, retaining raw roots.
+
+        Immutable batch checkpoints survive failures/restarts. Each original
+        message still gets its own A1 commit and exact source coverage.
+        """
+        messages = list(messages)
+        if not messages or all(self._organized(m) for m in messages):
+            return []
+        if getattr(self.gateway.provider, "name", "") == "fixture":
+            for message in messages:
+                commit(await self.propose(message))
+            return [m.ref for m in messages]
+        schema = deepcopy(EXPERIENCE_SCHEMA)
+        schema["properties"]["events"]["maxItems"] = 12
+        item = schema["properties"]["events"]["items"]
+        item["required"].append("message_ref")
+        item["properties"]["message_ref"] = {"type": "string"}
+        groups, current = [], []
+        for message in messages:
+            if message.payload.get("role") != "user":
+                raise ValueError("batch memory only accepts user messages")
+            for start, end, fragment in source_windows(message.body_markdown):
+                row = {"ref": message.ref, "start": start, "end": end, "text": fragment, "created_at": message.created_at}
+                if current and json_bytes([*current, row]) > 18000:
+                    groups.append(current)
+                    current = []
+                current.append(row)
+        if current:
+            groups.append(current)
+        checkpoints, outputs, calls = [], [], 0
+        for group in groups:
+            # Keep completed pre-clock checkpoints reusable after upgrading.
+            identity = [{k: v for k, v in row.items() if k != "created_at"} for row in group]
+            key = "run_exp_batch_" + digest([identity, "v1"])[:24]
+            try:
+                checkpoint = self.store.get_record(key)
+            except KeyError:
+                if calls >= max_new_chunks:
+                    raise IngestProgressPending("batch A1 checkpoints saved; more original windows remain")
+                existing = self.store.list_records("event")
+                selection = select_materials(self.store, [r.ref for r in existing],
+                    query=" ".join(r["text"] for r in group), max_bytes=3500, max_records=3,
+                    max_record_bytes=1000, include_counters=False)
+                request = ModelRequest(role="experience", purpose="A1_batch", prompt_version="experience/v1",
+                    budget_tokens=40000, max_tokens=4096, output_schema=schema,
+                    messages=[{"role": "system", "content": load_prompt("experience") +
+                        "\n合并整理一批用户原话，只提取值得持续记忆的事实、偏好、约定与变化。"
+                        "每个event必须有message_ref和该原文窗口中的逐字quote。不要把闲聊或角色回答当用户事实。"
+                        "用户明确临时使用的信息不要提为长期事实。existing_event_ref只能来自已展示旧事件。"},
+                        {"role": "user", "content": json.dumps({"messages": group,
+                            "existing_events": selection.material}, ensure_ascii=False)}])
+                response = await self.gateway.generate(request)
+                data = json.loads(response.content)
+                import jsonschema
+                jsonschema.validate(data, schema)
+                available = {r["ref"] for r in selection.material}
+                for item in data["events"]:
+                    if not any(row["ref"] == item["message_ref"] and item["quote"] in row["text"] for row in group):
+                        raise ValueError("batch A1 quote outside the named original window")
+                    if item.get("existing_event_ref") and item["existing_event_ref"] not in available:
+                        raise ValueError("batch A1 references unshown prior event")
+                checkpoint = Record(record_id=key, record_kind="cognitive_run", agent_id=self.store.agent_id,
+                    user_id=self.store.user_id, source_refs=list(dict.fromkeys([*[r["ref"] for r in group], *available])),
+                    payload={"role": "A1_batch", "output": data, "provider": response.provider,
+                             "model": response.model, "source_windows": group})
+                self.store.commit([checkpoint], key, expected={key: 0})
+                calls += 1
+            checkpoints.append(checkpoint)
+            for item in checkpoint.payload["output"]["events"]:
+                window = next(row for row in checkpoint.payload["source_windows"]
+                              if row["ref"] == item["message_ref"] and item["quote"] in row["text"])
+                outputs.append({**item, "_window_start": window["start"], "_window_end": window["end"],
+                    "_generator": {"provider": checkpoint.payload["provider"], "model": checkpoint.payload["model"],
+                                   "prompt_version": "experience/v1", "run_id": checkpoint.record_id}})
+        for message in messages:
+            if self._organized(message):
+                continue
+            data = {"events": [{k: v for k, v in item.items() if k != "message_ref"}
+                               for item in outputs if item["message_ref"] == message.ref]}
+            commit(await self.propose(message, extraction=(data, checkpoints)))
+        return [m.ref for m in messages]
+
+    def _organized(self, message):
+        try:
+            self.store.get_record("run_exp_" + digest({"message": message.ref, "version": "v1"})[:24])
+            return True
+        except KeyError:
+            return False
 
     async def _bounded_extract(self, message, snapshot, existing, *, max_new_chunks=8):
         results, checkpoints, new_chunks = [], [], 0
@@ -96,7 +187,7 @@ class ExperienceOrganizer:
                                    "prompt_version": checkpoint.payload["prompt_version"], "run_id": checkpoint.record_id}})
         return {"events": results}, checkpoints
 
-    async def propose(self, message: Record, *, fixture: dict | None = None) -> Proposal:
+    async def propose(self, message: Record, *, fixture: dict | None = None, extraction=None) -> Proposal:
         if message.record_kind != "raw_message" or message.payload.get("role") != "user":
             raise ValueError("only user raw messages enter A1; role output is not external evidence")
         snapshot = self.store.snapshot()
@@ -107,7 +198,10 @@ class ExperienceOrganizer:
                                     "event_key": digest(re.sub(r"\s+", "", message.body_markdown)),
                                     "occurred_at": None, "reality_scope": "reported", "participants": []}]}
         checkpoints = []
-        if fixture is not None:
+        if extraction is not None:
+            data, checkpoints = extraction
+            provider, model = checkpoints[-1].payload["provider"], checkpoints[-1].payload["model"]
+        elif fixture is not None:
             import jsonschema
             jsonschema.validate(fixture, EXPERIENCE_SCHEMA)
             data, provider, model = fixture, "fixture", "literal-organizer-v1"

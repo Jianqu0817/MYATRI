@@ -221,8 +221,12 @@ class JobQueue:
             return json.loads(row[0]) if row else default
 
     def set_meta(self, name, value):
+        self.set_meta_many({name: value})
+
+    def set_meta_many(self, values):
         with self.db() as db:
-            db.execute("INSERT OR REPLACE INTO schedule VALUES (?,?,?,?)", (self.agent_id, self.user_id, name, json.dumps(value)))
+            db.executemany("INSERT OR REPLACE INTO schedule VALUES (?,?,?,?)",
+                [(self.agent_id, self.user_id, name, json.dumps(value)) for name, value in values.items()])
 
     def log_usage(self, payload):
         with self.db() as db:

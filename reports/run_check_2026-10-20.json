@@ -1,0 +1,59 @@
+{
+  "date": "2026-10-20",
+  "version": "0.1.3",
+  "test_root": "D:\\DS_workspace\\MYATRI\\reports\\run_check_tmp_20261020_230230",
+  "scope": "synthetic CLI offline and bounded live Application run; separate-process restart and backup/restore",
+  "status": "core_paths_passed_persona_not_executed",
+  "model": "deepseek-flash",
+  "requests_started": 10,
+  "successful_http_responses": 10,
+  "prompt_tokens": 9732,
+  "completion_tokens": 1868,
+  "estimated_peak_cost_usd": 0.0051612,
+  "pricing_basis": "existing local config: input 0.30 and output 1.20 USD per million; estimate ignores cache discounts, not actual billing",
+  "roles": {
+    "foreground": 2,
+    "experience": 2,
+    "emotion": 1,
+    "compaction": 1,
+    "association": 1,
+    "reflection": 1,
+    "theme": 1,
+    "temporary_state": 1
+  },
+  "checks": {
+    "offline_cli_commands": 9,
+    "live_first_reply": "好的，我记下了这个约定：蓝色笔记本的代号是“星河”，放在书架第二层。",
+    "live_reply_after_restart": "代号是“星河”，放在书架第二层。",
+    "restart_recall_correct": true,
+    "summary_persisted": true,
+    "emotion_appraisals": 1,
+    "archive_doctor_ok": true,
+    "backup_restore_recall_correct": true,
+    "restore_doctor_ok": true
+  },
+  "job_counts": {
+    "succeeded": 12,
+    "failed": 1
+  },
+  "blocked_jobs": [
+    {
+      "id": "job_5977c648c14e4d1abb8948289a55a957",
+      "role": "persona_revision",
+      "status": "failed",
+      "error": "material planning required: bounded run check request cap reached"
+    }
+  ],
+  "probe_notes": [
+    "Probe JSON logging initially attempted to serialize a Record directly; recovered the already-persisted reply/summary without repeating model requests.",
+    "The 10-request guard blocked persona_revision before HTTP. The probe used BudgetExceeded default request_size, so Worker recorded failed instead of deferred; this record was retained. It is not evidence of a failed persona model response."
+  ],
+  "limits": {
+    "requests": 10,
+    "estimated_cost_usd": 0.05,
+    "automatic_gateway_retries": 0
+  },
+  "production_source_changed_this_run": false,
+  "existing_user_runtime_changed": false,
+  "background_process_left_running": false
+}

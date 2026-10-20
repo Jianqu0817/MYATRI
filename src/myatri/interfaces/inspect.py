@@ -30,6 +30,7 @@ def inspect_record(store, identifier):
 
 
 def doctor(app):
+    app.store.flush_projection()
     issues = app.store.verify_archive()
     for state in app.states.list():
         if state.payload["status"] == "consolidated":
@@ -50,6 +51,17 @@ def doctor(app):
                             for job in app.queue.list_jobs() if job["status"] == "failed"],
             "live_verification_scope": "configured provider protocol capabilities, not longitudinal personality quality",
             "outreach_enabled": False,
+            "emotion_enabled": app.emotions.config.enabled,
+            "emotion_appraisals": len(app.store.list_records("emotion_appraisal")),
+            "maintenance_turns": app.maintenance.turns,
+            "deep_every_batches": app.maintenance.deep_every,
+            "persona_every_batches": app.maintenance.persona_every,
+            "trace_every_turns": app.conversation.context.trace_every_turns,
+            "projection_every_commits": app.store.projection_every,
+            "timezone": str(app.conversation.context.timezone),
+            "last_maintenance": app.queue.get_meta("last_maintenance"),
+            "context_limit": app.conversation.context.budget.limit,
+            "compact_at": app.conversation.context.budget.compact_at,
             "embedding": "BGE local ONNX" if app.index.provider else "local TF-IDF lexical baseline"}
 
 

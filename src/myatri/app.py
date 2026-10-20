@@ -19,11 +19,14 @@ from myatri.cognition.association import AssociationAgent
 from myatri.cognition.theme import ThemeAgent
 from myatri.cognition.persona_revision import PersonaRevisionAgent, record_counter_search
 from myatri.cognition.attribution import AttributionAgent
+from myatri.cognition.emotion import EmotionAgent
+from myatri.persona.emotion import EmotionState
 from myatri.conversation.engine import Conversation
 from myatri.runtime.commit import Committer
 from myatri.runtime.jobs import JobQueue
 from myatri.runtime.scheduler import Scheduler
 from myatri.runtime.worker import Worker
+from myatri.runtime.maintenance import Maintenance
 
 
 class Application:
@@ -33,7 +36,8 @@ class Application:
         self.config = config or {}
         if self.config.get("outreach", {}).get("enabled"):
             raise ValueError("E01 is not implemented; real sending cannot be enabled in V1")
-        self.store = ArchiveStore(self.root, agent_id, user_id)
+        self.store = ArchiveStore(self.root, agent_id, user_id,
+                                  projection_every=self.config.get("storage", {}).get("projection_every_commits", 1))
         self.persona = PersonaState(self.store)
         self.persona.initialize(self.config.get("initial_persona_entries"))
         self.queue = JobQueue(self.root / "runtime.sqlite3", agent_id, user_id)
@@ -62,13 +66,20 @@ class Application:
         self.index = MemoryIndex(self.store, embedding_provider)
         self.recall = RecallService(self.store, self.index)
         self.states = TemporaryStates(self.store)
+        self.emotions = EmotionState(self.store, self.config.get("emotion", {}))
         self.committer = Committer(self.store)
+        cognition = self.config.get("cognition", {})
+        self.maintenance = Maintenance(self, cognition.get("maintenance_turns", 0),
+            deep_every=cognition.get("deep_every_batches", 1), persona_every=cognition.get("persona_every_batches", 1))
         self.conversation = Conversation(self.store, self.gateway, self.recall, self.index,
                                          on_message=self.enqueue_message,
                                          on_answer=self.enqueue_answer,
                                          protocol_store=self.queue,
                                          context_options=self.config.get("context", {}),
                                          enable_tools=mode == "offline" or self.config.get("chat", {}).get("capabilities_verified", False))
+        self.conversation.context.emotions = self.emotions
+        if self.maintenance.turns:
+            self.conversation.context.compactor.before_compact = self.maintenance.before_compact
         scheduling = self.config.get("schedule", {})
         self.scheduler = Scheduler(self.queue, timezone_name=scheduling.get("timezone", "Asia/Shanghai"),
                                    period_hours=scheduling.get("period_hours", 3),
@@ -77,15 +88,31 @@ class Application:
              "cycle": self._cycle, "association": self._association, "theme": self._theme,
              "reflection": self._reflection, "temporary_state": self._temporary,
              "temporary_review": self._temporary, "persona_revision": self._persona_revision,
-             "attribution": self._attribution,
+             "attribution": self._attribution, "emotion": self._emotion,
+             "maintenance": self._maintenance,
              "persona_review": self._persona_review}, self._apply)
+        self.worker.poll_seconds = cognition.get("poll_seconds", 5)
+        if not isinstance(self.worker.poll_seconds, (int, float)) or self.worker.poll_seconds <= 0:
+            raise ValueError("poll_seconds must be positive")
+        if self.maintenance.turns:
+            # Saved per-message jobs from the older policy hand off to the
+            # batch cursor. Never replay their saved result after migration.
+            self.worker.batch_policy = True
+
+    async def _maintenance(self, spec):
+        return await self.maintenance.run(spec.input_refs, reason=spec.payload.get("reason", "turns"))
 
     def enqueue_message(self, message, fixture=None):
         self.queue.set_meta("last_activity", message.created_at)
+        if self.maintenance.turns:
+            return None
         return self.queue.enqueue(JobSpec(role="ingest", input_refs=[message.ref], priority=50,
                                          payload={"fixture": fixture} if fixture else {}))
 
     def recover_pending(self):
+        if self.maintenance.turns:
+            self.maintenance.schedule(force=True)
+            return
         # Reconcile persisted source watermark; enqueue is idempotent even after a crash.
         for message in self.store.list_records("raw_message"):
             if message.payload.get("role") == "user":
@@ -95,6 +122,8 @@ class Application:
         self.enqueue_feedback()
 
     def enqueue_answer(self, answer):
+        if self.maintenance.turns:
+            return self.maintenance.schedule(force=True)
         snapshot = answer.payload.get("context_snapshot")
         if not snapshot:
             return None
@@ -237,6 +266,15 @@ class Application:
         proposal = await ReflectionAgent(self.store, self.gateway).propose(spec.input_refs)
         return {"kind": "proposal", "proposal": proposal.model_dump(mode="json"), "next": "temporary_state", "input_refs": spec.input_refs}
 
+    async def _emotion(self, spec):
+        proposal = await EmotionAgent(self.store, self.gateway, self.emotions.config).propose(spec.input_refs[0])
+        return {"kind": "proposal", "proposal": proposal.model_dump(mode="json")} if proposal else {"kind": "noop"}
+
+    def enqueue_emotion(self, event_ref):
+        if not self.emotions.config.enabled or not self.emotions.config.llm_appraisal:
+            return None
+        return self.queue.enqueue(JobSpec(role="emotion", input_refs=[event_ref], priority=40))
+
     async def _temporary(self, spec):
         refs = list(dict.fromkeys([*spec.input_refs, *[r.ref for r in self.states.list() if r.payload["status"] in {"open", "paused"}],
                                   *[r.ref for r in self.store.list_records("behavior_attempt")]]))
@@ -259,15 +297,34 @@ class Application:
 
     async def _apply(self, result):
         kind = result["kind"]
+        if kind == "maintenance_done":
+            self.maintenance.schedule()
+            return
         if kind in {"proposal", "revision_candidate"}:
             proposal = Proposal.model_validate(result["proposal"])
             if proposal.role == "attribution":
                 self._submit_attribution(proposal)
             else:
-                self.committer.submit_proposal(proposal)
+                try:
+                    self.committer.submit_proposal(proposal)
+                except Exception as exc:
+                    from myatri.storage import ConflictError
+                    if not isinstance(exc, ConflictError) or proposal.role != "emotion":
+                        raise
+                    appraisal = next((r for r in proposal.records if r.record_kind == "emotion_appraisal"), None)
+                    if appraisal is None:
+                        raise
+                    # A concurrent writer may already have committed the one
+                    # canonical event appraisal. Never apply a second impulse.
+                    prior = self.store.get_record(appraisal.record_id)
+                    if prior.payload["event_ref"] != appraisal.payload["event_ref"]:
+                        raise
+                    return
             new_events = [r.ref for r in proposal.records if r.record_kind == "event"]
             if new_events:
                 self.enqueue_feedback(new_events)
+                for event_ref in new_events:
+                    self.enqueue_emotion(event_ref)
             if any(r.record_kind == "behavior_attempt" for r in proposal.records):
                 self.enqueue_feedback()
                 self.queue.enqueue(JobSpec(role="temporary_state", prompt_version="v2", input_refs=
@@ -285,12 +342,15 @@ class Application:
                 if next_role == "index":
                     refs = self._index_refs()
                 self.queue.enqueue(JobSpec(role=next_role, input_refs=refs,
+                    payload={"manual": True} if result.get("manual") else {},
                     prompt_version="v2" if next_role == "temporary_state" else "v1"))
         elif kind == "indexed":
             if result["refs"]:
-                self.queue.enqueue(JobSpec(role="cycle", input_refs=result["refs"]))
+                self.queue.enqueue(JobSpec(role="cycle", input_refs=result["refs"], payload={"manual": True} if result.get("manual") else {}))
         elif kind == "enqueue":
             for spec in result["jobs"]:
+                if result.get("manual"):
+                    spec = {**spec, "payload": {**spec.get("payload", {}), "manual": True}}
                 self.queue.enqueue(JobSpec.model_validate(spec))
         elif kind == "review_result":
             from myatri.contracts import PersonaPatch
@@ -339,7 +399,11 @@ class Application:
 
     async def drain(self, max_jobs=100):
         count = 0
-        while count < max_jobs and await self.worker.run_once():
+        while count < max_jobs:
+            if self.maintenance.turns:
+                self.maintenance.schedule(force=True)
+            if not await self.worker.run_once():
+                break
             count += 1
         return count
 
@@ -353,6 +417,10 @@ class Application:
                     # apparently active scheduler with no consumer.
                     await worker
                     raise RuntimeError("background worker exited unexpectedly")
+                if self.maintenance.turns:
+                    self.maintenance.schedule()
+                    await asyncio.sleep(self.worker.poll_seconds)
+                    continue
                 now = datetime.now(timezone.utc)
                 raw_activity = self.queue.get_meta("last_activity")
                 try:

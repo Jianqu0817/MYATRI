@@ -49,7 +49,7 @@ class Contract(BaseModel):
 KINDS = {"raw_message", "event", "interpretation", "reflection", "theme",
          "temporary_state", "activation", "behavior_attempt", "persona_version",
          "persona_change", "attention_item", "summary", "cognitive_run", "edge",
-         "cluster_snapshot", "index_generation", "usage"}
+         "cluster_snapshot", "index_generation", "usage", "emotion_appraisal", "emotion_retraction"}
 
 
 class Record(Contract):
@@ -221,6 +221,7 @@ class ModelRequest(Contract):
     timeout: float = Field(default=45, gt=0)
     max_tokens: int = Field(default=1024, ge=1)
     budget_tokens: int = Field(default=16000, ge=1)
+    estimated_input_tokens: int | None = Field(default=None, ge=1)
     thinking: bool = False
     reasoning_effort: Literal["low", "high", "max"] = "low"
 

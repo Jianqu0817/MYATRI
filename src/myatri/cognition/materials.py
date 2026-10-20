@@ -33,7 +33,7 @@ def _bound(value, string_bytes=500, items=6):
 
 def project_record(record, max_bytes=2800, *, complete=False):
     full = {"ref": record.ref, "record_id": record.record_id, "revision": record.revision,
-            "record_kind": record.record_kind, "text": record.body_markdown,
+            "record_kind": record.record_kind, "created_at": record.created_at, "text": record.body_markdown,
             "payload": record.payload, "source_refs": record.source_refs, "complete": True}
     if complete or json_bytes(full) <= max_bytes:
         return full

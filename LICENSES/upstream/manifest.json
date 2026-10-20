@@ -1,8 +1,8 @@
 {
   "schema_version": "1.0",
   "date": "2026-10-20",
-  "project_version": "0.1.2",
-  "adoption": "Two small modified source excerpts; no complete upstream framework dependency.",
+  "project_version": "0.1.3",
+  "adoption": "Three small source adaptations; no complete upstream framework dependency.",
   "adaptations": [
     {
       "id": "amem-linked-neighbors",
@@ -84,6 +84,76 @@
         "tests/integration/test_commit_recovery.py",
         "tests/test_memory_consistency.py"
       ]
+    },
+    {
+      "id": "emotional-memory-pad-dynamics",
+      "repository": "gianlucamazza/emotional-memory",
+      "commit": "8b84bf3725448f2545337c08e346434819c01628",
+      "sources": [
+        {
+          "path": "src/emotional_memory/mood.py",
+          "url": "https://github.com/gianlucamazza/emotional-memory/blob/8b84bf3725448f2545337c08e346434819c01628/src/emotional_memory/mood.py",
+          "git_blob_sha256": "091076cd601cacce5de6c5065c8c8982039b768d8a4718240d44d6deeae85e8f",
+          "functions": [
+            {
+              "function": "regress",
+              "lines": [
+                101,
+                122
+              ]
+            },
+            {
+              "function": "update",
+              "lines": [
+                124,
+                164
+              ]
+            }
+          ]
+        },
+        {
+          "path": "src/emotional_memory/affect.py",
+          "url": "https://github.com/gianlucamazza/emotional-memory/blob/8b84bf3725448f2545337c08e346434819c01628/src/emotional_memory/affect.py",
+          "git_blob_sha256": "18582bbaf8997542ce94148c1e05762b3234056c8344194282515b59a52a41fa",
+          "functions": [
+            {
+              "function": "distance",
+              "lines": [
+                61,
+                67
+              ]
+            },
+            {
+              "function": "lerp",
+              "lines": [
+                69,
+                76
+              ]
+            }
+          ]
+        }
+      ],
+      "license": "MIT",
+      "copyright": "Copyright (c) 2026 Gianluca Mazza <info@gianlucamazza.it>",
+      "license_file": "Emotional-Memory-LICENSE",
+      "license_sha256": "babeb375e954b7970fd93aa970528f2b939c37c2abfb8265901667fd53e3f107",
+      "notice": "No independent NOTICE in the pinned repository tree.",
+      "implementation": "src/myatri/_vendor/emotional_memory.py",
+      "production_callers": [
+        "src/myatri/persona/emotion.py:EmotionState.read",
+        "src/myatri/persona/emotion.py:EmotionState.rerank_context"
+      ],
+      "modifications": [
+        "Extract PAD regression, EMA, interpolation and Euclidean distance as pure tuple functions.",
+        "Replace upstream Pydantic clamping with strict MYATRI finite bounded contracts.",
+        "Caller owns clocks, provenance, snapshot replay and immutable appraisals.",
+        "Do not adopt upstream storage, retrieval reinforcement, personality evolution or model dependencies."
+      ],
+      "tests": [
+        "tests/test_emotion.py",
+        "scripts/verify_emotion_upstream.py"
+      ],
+      "equivalence_scope": "1000 numerical comparisons of inspected MoodField and CoreAffect functions; not full upstream pipeline equivalence."
     }
   ],
   "reviewed_not_adopted": [

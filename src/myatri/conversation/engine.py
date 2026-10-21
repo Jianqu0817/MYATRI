@@ -9,51 +9,61 @@ from myatri.contracts import ModelRequest
 from myatri.providers.gateway import ProviderError, assistant_message, validate_protocol
 from myatri.persona.temporary import resolve
 from .context import ContextBuilder
+from .tool_results import TOOL_RESULT_BYTES, encoded_size, recall_page, tool_audit
 
 
-TOOLS = [{"type": "function", "function": {"name": "recall", "description": "回忆带版本来源的本地材料",
-    "parameters": {"type": "object", "properties": {"query": {"type": "string"}}, "required": ["query"], "additionalProperties": False}}},
+TOOLS = [{"type": "function", "function": {"name": "recall", "description": "搜索本地记忆，返回有界来源目录和短摘录；需原话时再read_record。next_offset非空时可用同query分页。",
+    "parameters": {"type": "object", "properties": {"query": {"type": "string"},
+        "offset": {"type": "integer", "minimum": 0},
+        "limit": {"type": "integer", "minimum": 1, "maximum": 8}},
+        "required": ["query"], "additionalProperties": False}}},
     {"type": "function", "function": {"name": "read_record", "description": "按精确ID@revision读取原始记录",
     "parameters": {"type": "object", "properties": {"ref": {"type": "string"},
         "offset": {"type": "integer", "minimum": 0},
+        "field": {"type": "string", "enum": ["body_markdown", "payload_json", "source_refs_json"]},
         "limit": {"type": "integer", "minimum": 1, "maximum": 800}},
         "required": ["ref"], "additionalProperties": False}}}]
 
 
-def read_record_page(store, ref, snapshot=None, *, offset=None, limit=None):
+def read_record_page(store, ref, snapshot=None, *, offset=None, limit=None, field=None):
     """Keep small-record compatibility; page large text without dropping provenance."""
     if offset is not None and (type(offset) is not int or offset < 0):
         raise ValueError("offset must be a nonnegative integer")
     if limit is not None and (type(limit) is not int or not 1 <= limit <= 800):
         raise ValueError("limit must be between 1 and 800")
+    if field not in (None, "body_markdown", "payload_json", "source_refs_json"):
+        raise ValueError("invalid record field")
     record = resolve(store, ref, snapshot)
     full = record.model_dump(mode="json")
-    if offset is None and limit is None and len(json.dumps(full, ensure_ascii=False).encode()) <= 6000:
+    if offset is None and limit is None and field is None and encoded_size(full) <= TOOL_RESULT_BYTES:
         return full
     body = record.body_markdown
     content_field = "body_markdown"
-    if not body:
+    if field == "source_refs_json":
+        body = json.dumps(record.source_refs, ensure_ascii=False)
+        content_field = field
+    elif field == "payload_json" or (not body and field != "body_markdown"):
         body = json.dumps(record.payload, ensure_ascii=False, sort_keys=True)
         content_field = "payload_json"
     offset, limit = offset or 0, limit or 800
     page = {"ref": record.ref, "record_kind": record.record_kind,
-        "agent_id": record.agent_id, "user_id": record.user_id,
+        "agent_id": record.agent_id[:96], "user_id": record.user_id[:96],
         "author_kind": record.author_kind, "created_at": record.created_at,
         "content_field": content_field, "offset": offset, "total_chars": len(body),
-        "source_refs": record.source_refs[:10], "source_ref_count": len(record.source_refs),
-        "source_refs_complete": len(record.source_refs) <= 10,
+        "source_refs": record.source_refs[:3], "source_ref_count": len(record.source_refs),
+        "source_refs_complete": len(record.source_refs) <= 3,
         "content_hash": record.content_hash}
     payload = {}
     for key in ("role", "reality_scope", "participants", "event_refs"):
         value = record.payload.get(key)
         if isinstance(value, str):
-            payload[key] = value[:160]
+            payload[key] = value[:96]
         elif isinstance(value, list):
-            payload[key] = [str(item)[:160] for item in value[:10]]
+            payload[key] = [str(item)[:96] for item in value[:3]]
     for key in ("channel_source", "attribution"):
         value = record.payload.get(key)
         if isinstance(value, dict):
-            payload[key] = {field: value[field][:160] if isinstance(value[field], str) else value[field]
+            payload[key] = {field: value[field][:96] if isinstance(value[field], str) else value[field]
                            for field in ("sender_id", "sender_name", "message_id", "speaker_id",
                             "subject_id", "attribution", "confirmed", "source_message_id")
                            if field in value and isinstance(value[field], (str, bool, type(None)))}
@@ -63,8 +73,12 @@ def read_record_page(store, ref, snapshot=None, *, offset=None, limit=None):
     while True:
         end = offset + len(chunk)
         page.update(body_markdown=chunk, next_offset=end if end < len(body) else None)
-        if len(json.dumps(page, ensure_ascii=False).encode()) <= 6000 or len(chunk) <= 1:
+        if encoded_size(page) <= TOOL_RESULT_BYTES:
             return page
+        if len(chunk) <= 1:
+            # Optional attribution can be huge even when the body is short.
+            page.pop("payload", None)
+            continue
         chunk = chunk[:max(1, len(chunk) // 2)]
 
 
@@ -109,10 +123,12 @@ class Conversation:
             saved = self.protocol_store.get_protocol(raw.record_id) if self.protocol_store else None
             if saved and saved["status"] == "active":
                 messages, snapshot, start_step = saved["messages"], saved["snapshot"], saved["steps"]
+                audit = list(saved.get("tool_audit", []))
                 validate_protocol(messages)
             else:
                 messages, snapshot = await self.context.abuild_context(text, tools=tools, persist_activation=checkpoint)
                 start_step = 0
+                audit = []
             for step in range(start_step, self.max_steps):
                 reply_policy = self.context.reply_policy
                 output_tokens = self.context.budget.output_reserve
@@ -145,6 +161,8 @@ class Conversation:
                         protocol = {"status": "completed", "snapshot": snapshot,
                             "steps": step+1, "reply_ref": answer.ref, "sent_at": raw.created_at,
                             "replied_at": answer.created_at, "full_checkpoint": checkpoint}
+                        if audit:
+                            protocol["tool_audit"] = audit
                         if checkpoint:
                             protocol["messages"] = messages
                             protocol["context"] = self.context.explain_context()
@@ -155,26 +173,28 @@ class Conversation:
                         self.on_answer(answer)
                     return answer
                 for call in response.tool_calls:
+                    name = call.get("function", {}).get("name", "unknown")
                     try:
                         name = call["function"]["name"]
                         definition = next(t["function"] for t in tools if t["function"]["name"] == name)
                         args = json.loads(call["function"]["arguments"])
                         jsonschema.validate(args, definition["parameters"])
                         if name == "recall":
-                            result = self.recall.recall(args["query"], snapshot=snapshot, budget=1800).model_dump(mode="json")
+                            bundle = self.recall.recall(args["query"], snapshot=snapshot, budget=1800)
+                            result = recall_page(bundle, offset=args.get("offset", 0), limit=args.get("limit", 4))
                         elif name in self.tool_handlers:
                             result = self.tool_handlers[name][1](**args)
                         else:
                             result = read_record_page(self.store, args["ref"], snapshot,
-                                offset=args.get("offset"), limit=args.get("limit"))
+                                offset=args.get("offset"), limit=args.get("limit"), field=args.get("field"))
                         # Bounded result, without truncating JSON/protocol fields.
-                        encoded = json.dumps(result, ensure_ascii=False)
-                        if len(encoded.encode("utf-8")) > 6000:
+                        if encoded_size(result) > TOOL_RESULT_BYTES:
                             result = {"error": "record exceeds tool result budget", "ref": args.get("ref"), "suggestion": "use recall with narrower query"}
-                    except (ValueError, KeyError, StopIteration, jsonschema.ValidationError) as exc:
+                    except Exception as exc:
                         result = {"error": type(exc).__name__, "message": "tool arguments or source invalid"}
+                    audit.append({"step": step + 1, "call_id": call["id"], **tool_audit(name, result)})
                     messages.append({"role": "tool", "tool_call_id": call["id"], "content": json.dumps(result, ensure_ascii=False)})
                 if self.protocol_store:
                     self.protocol_store.save_protocol(raw.record_id, {"status": "active", "snapshot": snapshot,
-                        "steps": step+1, "messages": messages})
+                        "steps": step+1, "messages": messages, "tool_audit": audit})
             raise ProviderError("tool step limit reached; raw user message preserved, no fictitious reply committed")

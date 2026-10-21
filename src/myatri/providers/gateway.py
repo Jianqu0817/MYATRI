@@ -286,6 +286,14 @@ class Gateway:
     def _log(self, request, response, elapsed, status, charged, reservation):
         if self.usage_sink:
             self.usage_sink({"trace_id": request.trace_id, "purpose": request.purpose,
+                             "recorded_at": datetime.now(timezone.utc).isoformat(),
+                             "thinking_enabled": request.thinking,
+                             "reasoning_effort": request.reasoning_effort if request.thinking else None,
+                             "finish_reason": response.finish_reason,
+                             "request_max_tokens": request.max_tokens,
+                             "request_budget_tokens": request.budget_tokens,
+                             "estimated_input_tokens": request.estimated_input_tokens,
+                             "reasoning_content_present": bool(response.provider_fields.get("reasoning_content")),
                              "day": reservation[1], "budget_reservation_id": reservation[0],
                              "budget_scope": self.budget_scope,
                              "role": request.role, "prompt_version": request.prompt_version,

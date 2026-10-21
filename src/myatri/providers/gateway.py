@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
 import os
 import time
 from collections import deque
@@ -160,7 +161,7 @@ class Gateway:
     def __init__(self, provider, *, foreground_limit=2, background_limit=1,
                  daily_token_limit=200000, retries=2, retry_delay=0.1, usage_sink=None,
                  input_per_million=0.0, output_per_million=0.0,
-                 budget_ledger=None, budget_scope=None):
+                 budget_ledger=None, budget_scope=None, request_observer=None):
         self.provider = provider
         self.semaphores = {"foreground": asyncio.Semaphore(foreground_limit),
                            "background": asyncio.Semaphore(background_limit)}
@@ -172,6 +173,7 @@ class Gateway:
         self._local_budgets = {}
         self.retries, self.retry_delay = retries, retry_delay
         self.usage_sink = usage_sink
+        self.request_observer = request_observer
         self.input_price, self.output_price = input_per_million, output_per_million
 
     @staticmethod
@@ -247,6 +249,13 @@ class Gateway:
         async with self.semaphores[lane]:
             for attempt in range(self.retries + 1):
                 reservation = self._reserve(estimated, request)
+                if self.request_observer is not None:
+                    try:
+                        self.request_observer(request, attempt)
+                    except Exception:
+                        # No exception text/traceback: filesystem names or request
+                        # data may contain secrets. Capture is never required to chat.
+                        logging.getLogger(__name__).warning("Context capture unavailable; chat continues.")
                 started = time.monotonic()
                 try:
                     try:

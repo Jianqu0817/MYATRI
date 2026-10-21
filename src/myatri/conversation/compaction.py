@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+from copy import deepcopy
 import json
 
 import jsonschema
@@ -26,16 +27,26 @@ COMPACTION_SCHEMA = {
 
 
 class Compactor:
-    def __init__(self, store, gateway=None, *, llm_enabled=True, chunk_bytes=9000, max_chunks=8):
+    def __init__(self, store, gateway=None, *, llm_enabled=True, chunk_bytes=9000, max_chunks=8,
+                 detail_items=6, detail_chars=240, output_tokens=2048):
         self.store, self.gateway, self.llm_enabled = store, gateway, llm_enabled
         if chunk_bytes < 1000 or max_chunks < 1:
             raise ValueError("invalid compaction material limits")
         self.chunk_bytes, self.max_chunks = chunk_bytes, max_chunks
+        if not 6 <= detail_items <= 40 or not 240 <= detail_chars <= 1200 or not 2048 <= output_tokens <= 16000:
+            raise ValueError("invalid semantic detail limits")
+        self.schema = deepcopy(COMPACTION_SCHEMA)
+        self.schema["properties"]["items"]["maxItems"] = detail_items
+        self.schema["properties"]["items"]["items"]["properties"]["text"]["maxLength"] = detail_chars
+        self.output_tokens = output_tokens
+        self.prompt_version = "v2" if detail_items > 6 else "v1"
         self._lock = asyncio.Lock()
         self.before_compact = None
+        self.filter_records = lambda records: records
+        self.summary_allowed = lambda summary: True
 
     def _prepare(self, snapshot, preserve_ids):
-        raw = self.store.list_records("raw_message", snapshot=snapshot)
+        raw = self.filter_records(self.store.list_records("raw_message", snapshot=snapshot))
         preserve_ids = set(preserve_ids or [])
         available = {r.record_id for r in raw} | {r.ref for r in raw}
         if not preserve_ids <= available:
@@ -181,15 +192,15 @@ class Compactor:
                 if len(chunks) > self.max_chunks:
                     limitations.append(f"incremental_compaction_pending: processing {self.max_chunks}/{len(chunks)} remaining batches")
                 for chunk in chunks[:self.max_chunks]:
-                    request = ModelRequest(role="compaction", purpose="context_compaction", prompt_version="compaction/v1",
-                        budget_tokens=max(32000, self.chunk_bytes + 12000), max_tokens=2048, output_schema=COMPACTION_SCHEMA,
-                        messages=[{"role": "system", "content": load_prompt("compaction")},
+                    request = ModelRequest(role="compaction", purpose="context_compaction", prompt_version="compaction/" + self.prompt_version,
+                        budget_tokens=max(32000, self.chunk_bytes + 24000), max_tokens=self.output_tokens, output_schema=self.schema,
+                        messages=[{"role": "system", "content": load_prompt("compaction", self.prompt_version)},
                                   {"role": "user", "content": json.dumps(chunk, ensure_ascii=False)}])
                     response = await self.gateway.generate(request)
                     if response.tool_calls:
                         raise ValueError("compaction does not authorize tool calls")
                     data = json.loads(response.content)
-                    jsonschema.validate(data, COMPACTION_SCHEMA)
+                    jsonschema.validate(data, self.schema)
                     if data["decision"] == "defer":
                         raise ProviderError("semantic_compaction_deferred")
                     for item in data["items"]:
@@ -218,7 +229,7 @@ class Compactor:
                 if last is None:
                     raise ValueError("no semantic material or reusable result")
                 generator = {"provider": last["provider"], "model": last["model"],
-                             "prompt_version": "compaction/v1", "run_id": uid("summary")}
+                             "prompt_version": "compaction/" + self.prompt_version, "run_id": uid("summary")}
                 return self._publish(raw, preserved, snapshot, mode, items=items, generator=generator,
                                      batches=batches, limitations=limitations, covered_refs=covered,
                                      processed_segments=processed, reused_summary=semantic_previous.ref if semantic_previous else None)
@@ -244,6 +255,8 @@ class Compactor:
         if not summaries:
             return None
         summary = summaries[-1]
+        if not self.summary_allowed(summary):
+            return None
         persona = self.store.get_record("persona", snapshot=snapshot)
         if summary.payload["persona_ref"] != persona.ref:
             return None

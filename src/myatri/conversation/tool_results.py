@@ -1,8 +1,9 @@
 """Small model-facing views of immutable retrieval results, not new evidence."""
 from __future__ import annotations
 
-import json
 import re
+
+from .serialization import compact_json
 
 
 TOOL_RESULT_BYTES = 6000
@@ -10,7 +11,7 @@ _REF = re.compile(r"(?<![A-Za-z0-9_-])[A-Za-z0-9_-]{1,160}@[1-9][0-9]*(?![0-9])"
 
 
 def encoded_size(value):
-    return len(json.dumps(value, ensure_ascii=False).encode("utf-8"))
+    return len(compact_json(value).encode("utf-8"))
 
 
 def record_preview(record, *, excerpt_chars=180):

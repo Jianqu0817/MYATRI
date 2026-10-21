@@ -7,6 +7,7 @@ from myatri.contracts import ModelResponse
 from myatri.conversation.budget import TokenBudget
 from myatri.conversation.compaction import Compactor
 from myatri.conversation.context import ContextBuilder
+from myatri.conversation.serialization import compact_json
 from myatri.persona.patch import PersonaPatcher
 from myatri.persona.state import PersonaState
 from myatri.providers import Gateway
@@ -90,7 +91,7 @@ async def test_dense_summary_keeps_early_agreement_new_change_question_and_query
     assert change.ref not in builder.explain_context()["history_refs"]
     assert question.ref not in builder.explain_context()["history_refs"]
     assert projection["omitted_source_count"] > 0 and projection["omitted_source_refs"]
-    assert len(json.dumps(projection["items"], ensure_ascii=False).encode("utf-8")) <= 5000
+    assert len(compact_json(projection["items"]).encode("utf-8")) <= 5000
     # Selection does not erase old agreements or manufacture a conflict ruling.
     assert "较早约定与后续变化" in projection["note"]
     assert reopened.get_record(agreement.record_id).body_markdown == agreement.body_markdown
@@ -143,7 +144,7 @@ async def test_repeated_incremental_compaction_rotates_recent_attention_without_
         projection = projected(messages)
         refs = {ref for item in projection["items"] for ref in item["source_refs"]}
         assert {early.ref, change.ref, agreement.ref} <= refs
-        assert len(json.dumps(projection["items"], ensure_ascii=False).encode("utf-8")) <= 5000
+        assert len(compact_json(projection["items"]).encode("utf-8")) <= 5000
         assert builder.budget.fits(messages)
         span = next(item for item in summary.payload["semantic_items"] if early.ref in item["source_refs"])["source_spans"][0]
         assert early.body_markdown[span["start"]:span["end"]] == span["quote"]

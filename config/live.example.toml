@@ -16,10 +16,10 @@ output_per_million = 1.20
 enabled = false
 
 [context]
-# Chat body: aim for 40-80 non-space characters; local hard maximum, no rewrite API.
-reply_min_chars = 40
-reply_max_chars = 80
-reply_max_tokens = 512
+# Natural chat: usually 20-100 chars; local fallback cap 160, no rewrite API.
+reply_min_chars = 20
+reply_max_chars = 160
+reply_max_tokens = 1024
 trace_every_turns = 30
 timezone = "Asia/Shanghai"
 
@@ -31,6 +31,17 @@ compaction_chunk_bytes = 200000
 compaction_max_chunks = 16
 llm_compaction = true
 llm_activation = false
+reply_target_max_chars = 100
+recall_budget_chars = 50000
+recall_excerpt_chars = 4000
+summary_budget_bytes = 60000
+imported_history_budget_bytes = 96000
+recent_history_turns = 80
+recent_history_bytes = 240000
+compaction_detail_items = 24
+compaction_detail_chars = 600
+compaction_output_tokens = 8000
+capture_requests = false
 
 [cognition]
 # One completed user/assistant exchange counts as one turn.

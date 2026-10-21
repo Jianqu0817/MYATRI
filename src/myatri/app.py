@@ -22,6 +22,8 @@ from myatri.cognition.attribution import AttributionAgent
 from myatri.cognition.emotion import EmotionAgent
 from myatri.persona.emotion import EmotionState
 from myatri.conversation.engine import Conversation
+from myatri.conversation.capture import RequestCapture
+from myatri.conversation.session import SessionWindow
 from myatri.runtime.commit import Committer
 from myatri.runtime.jobs import JobQueue
 from myatri.runtime.scheduler import Scheduler
@@ -54,11 +56,19 @@ class Application:
             else:
                 raise ValueError("mode must be offline or live")
         budget = self.config.get("budget", {})
+        capture_enabled = self.config.get("context", {}).get("capture_requests", False)
+        if type(capture_enabled) is not bool:
+            raise ValueError("capture_requests must be a boolean")
+        capture = RequestCapture(self.root / "context-debug", provider_name=getattr(provider, "name", ""),
+                                 model=getattr(provider, "model", None), metadata_provider=lambda: {
+                                     key: value for key, value in self.conversation.context.explain_context().items()
+                                     if key in ("context_stats", "history_selection", "summary_omitted_items",
+                                                "active_topic", "budget_limit", "compact_at")}) if capture_enabled else None
         self.gateway = Gateway(provider, usage_sink=self.queue.log_usage,
                                budget_ledger=self.queue,
                                daily_token_limit=budget.get("daily_tokens", 200000),
                                input_per_million=budget.get("input_per_million", 0),
-                               output_per_million=budget.get("output_per_million", 0))
+                               output_per_million=budget.get("output_per_million", 0), request_observer=capture)
         embedding = self.config.get("embedding") or self.queue.get_meta("embedding", {})
         if embedding_provider is None and (embedding.get("backend") == "bge" or
                 (embedding.get("backend") == "auto" and (Path(embedding.get("path", "")) / "manifest.json").is_file())):
@@ -79,6 +89,7 @@ class Application:
                                          context_options=self.config.get("context", {}),
                                          enable_tools=mode == "offline" or self.config.get("chat", {}).get("capabilities_verified", False))
         self.conversation.context.emotions = self.emotions
+        self.conversation.context.window = SessionWindow(self.store, self.queue)
         if self.maintenance.turns:
             self.conversation.context.compactor.before_compact = self.maintenance.before_compact
         scheduling = self.config.get("schedule", {})
@@ -99,6 +110,18 @@ class Application:
             # Saved per-message jobs from the older policy hand off to the
             # batch cursor. Never replay their saved result after migration.
             self.worker.batch_policy = True
+
+    def clear_context(self):
+        """Reset the working window. Caller must hold conversation._lock.
+
+        Long-term recall, persona, emotion, source records and historical
+        request captures remain available. No model or external call occurs.
+        """
+        context = self.conversation.context
+        state = context.window.clear()
+        context.budget.anchor = None
+        context.last_explanation = {}
+        return state
 
     async def _maintenance(self, spec):
         return await self.maintenance.run(spec.input_refs, reason=spec.payload.get("reason", "turns"))

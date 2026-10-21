@@ -9,6 +9,8 @@ from myatri.contracts import ModelRequest
 from myatri.providers.gateway import ProviderError, assistant_message, validate_protocol
 from myatri.persona.temporary import resolve
 from .context import ContextBuilder
+from .window import context_stats
+from .serialization import compact_json
 from .tool_results import TOOL_RESULT_BYTES, encoded_size, recall_page, tool_audit
 
 
@@ -121,14 +123,18 @@ class Conversation:
                             if r.payload.get("role") == "assistant" and r.payload.get("reply_to"))
             checkpoint = (completed + 1) % self.context.trace_every_turns == 0
             saved = self.protocol_store.get_protocol(raw.record_id) if self.protocol_store else None
+            if saved and saved.get("status") == "context_reset":
+                raise ProviderError("turn belongs to a cleared context; use a new message ID")
             if saved and saved["status"] == "active":
                 messages, snapshot, start_step = saved["messages"], saved["snapshot"], saved["steps"]
                 audit = list(saved.get("tool_audit", []))
+                stats = saved.get("context_stats") or context_stats(messages)
                 validate_protocol(messages)
             else:
                 messages, snapshot = await self.context.abuild_context(text, tools=tools, persist_activation=checkpoint)
                 start_step = 0
                 audit = []
+                stats = self.context.explain_context().get("context_stats", {})
             for step in range(start_step, self.max_steps):
                 reply_policy = self.context.reply_policy
                 output_tokens = self.context.budget.output_reserve
@@ -160,7 +166,8 @@ class Conversation:
                     if self.protocol_store:
                         protocol = {"status": "completed", "snapshot": snapshot,
                             "steps": step+1, "reply_ref": answer.ref, "sent_at": raw.created_at,
-                            "replied_at": answer.created_at, "full_checkpoint": checkpoint}
+                            "replied_at": answer.created_at, "full_checkpoint": checkpoint,
+                            "context_stats": stats}
                         if audit:
                             protocol["tool_audit"] = audit
                         if checkpoint:
@@ -193,8 +200,9 @@ class Conversation:
                     except Exception as exc:
                         result = {"error": type(exc).__name__, "message": "tool arguments or source invalid"}
                     audit.append({"step": step + 1, "call_id": call["id"], **tool_audit(name, result)})
-                    messages.append({"role": "tool", "tool_call_id": call["id"], "content": json.dumps(result, ensure_ascii=False)})
+                    messages.append({"role": "tool", "tool_call_id": call["id"], "content": compact_json(result)})
                 if self.protocol_store:
                     self.protocol_store.save_protocol(raw.record_id, {"status": "active", "snapshot": snapshot,
-                        "steps": step+1, "messages": messages, "tool_audit": audit})
+                        "steps": step+1, "messages": messages, "tool_audit": audit,
+                        "context_stats": stats})
             raise ProviderError("tool step limit reached; raw user message preserved, no fictitious reply committed")

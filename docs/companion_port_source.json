@@ -1,0 +1,141 @@
+{
+  "source_repository": "https://github.com/Jianqu0817/MYATRI-AstrBot",
+  "source_commit": "4b2fd3eb752e8e81805e26bb9e5a8411c20a6bc6",
+  "files": [
+    {
+      "source": "src/myatri_bridge/__init__.py",
+      "destination": "src/myatri/companion/__init__.py",
+      "source_sha256": "499ff1cc968d81936f4af34ed9bbced1de09bfe1134890a3c868d7977e657f0c"
+    },
+    {
+      "source": "src/myatri_bridge/bridge.py",
+      "destination": "src/myatri/companion/bridge.py",
+      "source_sha256": "e3c9d964dbfc7aba4503fa8f24dfa02c236c3a716230cf75386a9ade35aaa596"
+    },
+    {
+      "source": "src/myatri_bridge/bubbles.py",
+      "destination": "src/myatri/companion/bubbles.py",
+      "source_sha256": "965a95f91c9ff98b11784654efc3a02f84da193c5c93e860a4a7471b0b1b8266"
+    },
+    {
+      "source": "src/myatri_bridge/claims.py",
+      "destination": "src/myatri/companion/claims.py",
+      "source_sha256": "6d2facf72aa721e1eb5d870085df69195049323be9f483400c97dc2dc5a738db"
+    },
+    {
+      "source": "src/myatri_bridge/cold_archive.py",
+      "destination": "src/myatri/companion/cold_archive.py",
+      "source_sha256": "87c6bee70a48fafbb2ee44c9f4f99e4512a3d36f11f63268d4f6077f1f3e0f8c"
+    },
+    {
+      "source": "src/myatri_bridge/context.py",
+      "destination": "src/myatri/companion/context.py",
+      "source_sha256": "868d23352a8efcef86a617cae86afb5b9939d946533ad7de7d65a9364a26bf85"
+    },
+    {
+      "source": "src/myatri_bridge/context_read_view.py",
+      "destination": "src/myatri/companion/context_read_view.py",
+      "source_sha256": "103fe0496a7fe4a3294522e010f1ca6133a56dc5c628f3780af8c2031fd90ede"
+    },
+    {
+      "source": "src/myatri_bridge/context_viewer.html",
+      "destination": "src/myatri/companion/context_viewer.html",
+      "source_sha256": "d12cb6c868c1f4c50e9a536834a5a326b517541e930c9ed3ff4951a17a904517"
+    },
+    {
+      "source": "src/myatri_bridge/context_viewer.py",
+      "destination": "src/myatri/companion/context_viewer.py",
+      "source_sha256": "0c41e4f9aadbde2c5422fb33aa942d8d4dea187c908a94ba07feeb9b00f3e29e"
+    },
+    {
+      "source": "src/myatri_bridge/dsh_client.py",
+      "destination": "src/myatri/companion/dsh_client.py",
+      "source_sha256": "3071a521a544b7f57bb5434a297bc1f9c8ba71f9aaec4e0f4dd4bfc4484d9e19"
+    },
+    {
+      "source": "src/myatri_bridge/group_memory.py",
+      "destination": "src/myatri/companion/group_memory.py",
+      "source_sha256": "fde02ac9267bc8cc100ddd71540f5577aa41a4e8c05d3b7586ed2e3c6e2d48c5"
+    },
+    {
+      "source": "src/myatri_bridge/group_prompt.py",
+      "destination": "src/myatri/companion/group_prompt.py",
+      "source_sha256": "9c2466b66dd235b681fb4a929520fd2dbff88a6621dcd0d54e9f9ea0a1413cb9"
+    },
+    {
+      "source": "src/myatri_bridge/health.py",
+      "destination": "src/myatri/companion/health.py",
+      "source_sha256": "8864083c4fdf27cc224b11e2edb59abc21b1c4cbdeb3c057ef04e3beba3e58d2"
+    },
+    {
+      "source": "src/myatri_bridge/identity.py",
+      "destination": "src/myatri/companion/identity.py",
+      "source_sha256": "661d8043cb6a402f99c3c022c3976e22078c3a478d27200b3346c107278cd539"
+    },
+    {
+      "source": "src/myatri_bridge/memory_review.py",
+      "destination": "src/myatri/companion/memory_review.py",
+      "source_sha256": "ac810196fd7f917c43c8bb71acb63d1dc1287f6ff8f8c208d84bc813e57d4c20"
+    },
+    {
+      "source": "src/myatri_bridge/monitor.html",
+      "destination": "src/myatri/companion/monitor.html",
+      "source_sha256": "a0862c6640cd1c06645b0c57fc8a8b9769292314c9972c864e31866354f22e70"
+    },
+    {
+      "source": "src/myatri_bridge/monitor.py",
+      "destination": "src/myatri/companion/monitor.py",
+      "source_sha256": "8cee301c3c148be9d6445bc6c5ef9a79bbfb3cd0d0134eab9413d5b81c1743b3"
+    },
+    {
+      "source": "src/myatri_bridge/proactive.py",
+      "destination": "src/myatri/companion/proactive.py",
+      "source_sha256": "9ac556ad9a63a8cf34db8e1bb2726953329e5fa41f9b61e46114d36952874d20"
+    },
+    {
+      "source": "src/myatri_bridge/proactive_prompt.py",
+      "destination": "src/myatri/companion/proactive_prompt.py",
+      "source_sha256": "cab0e866dd356bcb901dd498da3a5227da6c36644f2e05f0ba456278b48e9026"
+    },
+    {
+      "source": "src/myatri_bridge/prompt_data.py",
+      "destination": "src/myatri/companion/prompt_data.py",
+      "source_sha256": "d203b2ac5883006f0d77cb4f31cb37cbdd0d39fb34f587d6b5d4180cf205a2e7"
+    },
+    {
+      "source": "src/myatri_bridge/reading_conversation.py",
+      "destination": "src/myatri/companion/reading_conversation.py",
+      "source_sha256": "8b9adfed855240916263a0bec281cc895f5bbe460ea3ca34b1c4352d9032754f"
+    },
+    {
+      "source": "src/myatri_bridge/reply_guard.py",
+      "destination": "src/myatri/companion/reply_guard.py",
+      "source_sha256": "456197082b651d8d89c1fecce1b410a90738e9c0e63227f1e8746cb63b3043cb"
+    },
+    {
+      "source": "src/myatri_bridge/server.py",
+      "destination": "src/myatri/companion/server.py",
+      "source_sha256": "ee29e97333fbb2aa84c699ef9d6d9d6b91f60bdb5a646996f987ccb09d39627f"
+    },
+    {
+      "source": "src/myatri_bridge/short_memory.py",
+      "destination": "src/myatri/companion/short_memory.py",
+      "source_sha256": "6ce153077cbde2ce2efa89dec2861bba79f9a86148583af822ef3373833bbffb"
+    },
+    {
+      "source": "src/myatri_bridge/tool_reading.py",
+      "destination": "src/myatri/companion/tool_reading.py",
+      "source_sha256": "52b5339dde494dbd795737b5f8538f4574b68016c854691c21743475475ea379"
+    },
+    {
+      "source": "src/myatri_bridge/topics.py",
+      "destination": "src/myatri/companion/topics.py",
+      "source_sha256": "94897d9faf0e349e610da7439bad3c362b22e85c382c66ff351cbec5e627d1d0"
+    },
+    {
+      "source": "src/myatri_bridge/web_tools.py",
+      "destination": "src/myatri/companion/web_tools.py",
+      "source_sha256": "a291e2e14f827aa224b307e7a71130e1146a299be47f9e772fcfd0c0041ee373"
+    }
+  ]
+}

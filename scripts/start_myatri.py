@@ -54,9 +54,9 @@ def cli(root: Path, *args: str, agent: str = "atri", capture: bool = False):
 
 
 def prepare_profile() -> Path:
-    profile = PROJECT / "config/live.local.toml"
+    profile = PROJECT / "config/cli-engine.local.toml"
     if not profile.exists():
-        template = (PROJECT / "config/live.example.toml").read_text(encoding="utf-8")
+        template = (PROJECT / "config/cli-engine.toml").read_text(encoding="utf-8")
         template = template.replace("allow_paid = false", "allow_paid = true")
         template = template.replace("capabilities_verified = false", "capabilities_verified = true")
         # Exclusive creation never overwrites a profile created concurrently.
@@ -68,8 +68,8 @@ def prepare_profile() -> Path:
     with profile.open("rb") as stream:
         config = tomllib.load(stream)
     chat = config.get("chat", {})
-    if chat.get("allow_paid") is not True or chat.get("capabilities_verified") is not True:
-        raise RuntimeError("config/live.local.toml 尚未开启 live 调用，请检查 allow_paid 和 capabilities_verified。")
+    if chat.get("capabilities_verified") is not True:
+        raise RuntimeError("config/cli-engine.local.toml 尚未确认供应商能力。")
     if config.get("outreach", {}).get("enabled"):
         raise RuntimeError("当前版本不支持外发；请关闭 outreach.enabled。")
     return profile
@@ -104,7 +104,9 @@ def start(root: Path, check_only: bool, *, agent: str = "atri", persona_file: Pa
             return
         print("[3/3] 开始真实聊天；后台整理和情绪评价会自动运行。", flush=True)
         print("使用付费 DeepSeek API；输入 /quit 退出，输入 /compact 压缩上下文。\n", flush=True)
-        chat_args = ["--config", str(profile), "chat", "--mode", "live"]
+        chat_args = ["--config", str(profile), "companion", "--mode", "live",
+                     "--project", str(PROJECT), "--persona-file",
+                     str(persona_file or PROJECT / "config/personas/xiaowennuan/persona.md")]
         if display_name:
             chat_args += ["--display-name", display_name]
         cli(root, *chat_args, agent=agent)

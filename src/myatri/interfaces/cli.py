@@ -34,6 +34,14 @@ def parser():
     chat.add_argument("--message")
     chat.add_argument("--message-id")
     chat.add_argument("--display-name", help="聊天窗口中的角色名称；身份仍由持久化角色卡决定")
+    companion = sub.add_parser("companion", help="完整CLI角色运行时：记忆、分段、工具、重载与监视")
+    companion.add_argument("--mode", choices=["offline", "live"], default="offline")
+    companion.add_argument("--message")
+    companion.add_argument("--message-id")
+    companion.add_argument("--display-name", default="小温暖")
+    companion.add_argument("--persona-file")
+    companion.add_argument("--project")
+    companion.add_argument("--no-ui", action="store_true")
     worker = sub.add_parser("worker")
     worker.add_argument("--once", action="store_true")
     worker.add_argument("--mode", choices=["offline", "live"], default="offline")
@@ -96,7 +104,16 @@ async def run(args):
     if args.command == "models":
         from myatri.providers.local_onnx import download_model
         return output(download_model(Path(args.path)))
-    config = load_config(args.config)
+    config_path = args.config
+    if args.command == "companion" and config_path is None:
+        project = Path(args.project or Path.cwd())
+        choices = [project / "config/cli-engine.local.toml", project / "config/cli-engine.toml",
+                   Path(__file__).resolve().parents[1] / "config/cli-engine.toml"]
+        config_path = next((path for path in choices if path.is_file()), None)
+    config = load_config(config_path)
+    if args.command == "companion":
+        from myatri.companion.cli_runtime import run_cli
+        return await run_cli(args, config)
     if args.command == "init" and args.persona_file:
         from myatri.persona.state import PersonaState
         config["initial_persona_entries"] = PersonaState.parse_template(Path(args.persona_file).read_text(encoding="utf-8-sig"))

@@ -26,6 +26,10 @@ $env:PYTHONIOENCODING = "utf-8"
 $OutputEncoding = [Console]::OutputEncoding
 
 try {
+    if (-not $CheckOnly) {
+        . (Join-Path $PSScriptRoot "cli_services.ps1")
+        Stop-MyatriPreviousCli -ProjectDir $projectDir -StartedBefore ([DateTime]::Now)
+    }
     $uvCommand = Get-Command uv -ErrorAction SilentlyContinue
     $uvPath = if ($uvCommand) { $uvCommand.Source } else { Join-Path $env:USERPROFILE ".local\bin\uv.exe" }
     if (-not (Test-Path -LiteralPath $uvPath -PathType Leaf)) {

@@ -4,12 +4,13 @@ build-backend = "hatchling.build"
 
 [project]
 name = "myatri"
-version = "0.2.8"
+version = "0.3.0"
 description = "Persistent evidence-grounded character memory and gradual persona evolution"
 requires-python = ">=3.12,<3.13"
 dependencies = [
     "pydantic>=2.10,<3",
     "httpx>=0.28,<1",
+    "aiohttp>=3.11.18,<4",
     "numpy>=2,<3",
     "igraph>=0.11,<2",
     "leidenalg>=0.10,<1",
@@ -71,7 +72,7 @@ exclude = [
 
 [tool.hatch.build.targets.sdist]
 include = [
-    "/src", "/prompts", "/config/defaults.toml", "/config/schedules.toml",
+    "/src", "/prompts", "/config/defaults.toml", "/config/schedules.toml", "/config/cli-engine.toml", "/Monitor-Context.cmd", "/View-Context.cmd",
     "/config/persona_template.md", "/config/live.example.toml", "/config/personas", "/docs", "/tests", "/scripts",
     "/reports", "/evals", "/LICENSES", "/THIRD_PARTY_NOTICES.md", "/README.md", "/情绪模块开发.md", "/启动MYATRI.cmd", "/启动小温暖.cmd", "/pyproject.toml", "/uv.lock", "/.gitignore", "/.gitattributes",
 ]
@@ -91,3 +92,6 @@ dev-mode-dirs = ["src"]
 "config/personas/xiaowennuan/source.md" = "myatri/config/personas/xiaowennuan/source.md"
 "config/personas/xiaowennuan/README.md" = "myatri/config/personas/xiaowennuan/README.md"
 "config/personas/xiaowennuan/style_update_2026-10-21.md" = "myatri/config/personas/xiaowennuan/style_update_2026-10-21.md"
+
+"config/cli-engine.toml" = "myatri/config/cli-engine.toml"
+"docs/companion_port_source.json" = "myatri/companion/port_source.json"

@@ -1,5 +1,16 @@
 # MYATRI HANDOFF
 
+## CLI-COMPANION-0.3.0（2026-10-22，迁移完成并按授权同步GitHub）
+
+先发布AstrBot main 4b2fd3eb752e8e81805e26bb9e5a8411c20a6bc6（433项通过）；随后迁入MYATRI完整CLI运行时，用户明确只迁功能和角色卡、保留原CLI记忆，不导入群档案。核心升0.3.0；用户随后明确要求推送，本次同步到核心main分支，最终提交见Git历史。
+
+新版双击入口运行companion，沿用var/xiaowennuan或var/myatri-main及atri/local内部身份；迁入27个可移植py/html模块与逐字角色卡，旧卡有备份。工作窗80往返/100近期/200k，记忆20/200/100/10与30天冷档、分页阅读、成员归属、Harness、语义分段、主动调度、热重载/清窗、实际请求查看及监视均已接线。CLI控制8776/监视8777/查看8778，主动默认关，搜索独立限额按用户决定保留。旧Windows凭据继续使用。本地profile只有身份绑定/后端路径；无群SQLite导入。正常双击仅替换核验同checkout的旧CLI进程，CheckOnly不杀进程。
+
+原完整362项通过，迁入294项通过，656项不同检查均有通过证据；最后健康/CLI16项定向通过，wheel/sdist与临时目录独立fixture运行通过。新增模块及改动文件Ruff通过；旧CLI55项既有风格问题未扩修。角色卡与桥卡字节相同，85个改动文件常见凭据模式扫描无命中。无真实API调用、微信发送、生产库迁移或服务重启。
+
+详情 docs/CLI迁移_2026-10-22.md，来源docs/companion_port_source.json。原工作树其他Agent的author_kind更改保留，并补人类证据门控：self_initiated不会进入A1/维护。后续不要把核心新wheel自动塞回桥接的冻结0.2.8依赖，桥版与CLI已独立发布边界。正常启动后由用户验收真实延迟、语气与记忆效果，离线fixture不能证明模型行为质量。
+
+
 ## AUDIT-REPAIR-0.2.8（2026-10-21）
 
 按审计复核实施修复：core维护同task版本化一次恢复、失败隔离后新批继续、旧批人工重试不倒退游标且未解决隔离阻止压缩；A1非法归属候选保留checkpoint与typedreason，合格条目独立审核，覆盖明确validation_complete=false。桥接摘要持久升额、100条冻结窗分两段缓存、候选上限100/最终30项与超额隔离、4次失败停车、旧长退避一次解除；新增健康阈值、投递枚举原因/耗时、防重自然修补、鉴权Retry-Memory入口。两项目版本/锁/安装/vendor wheel一致0.2.8，角色卡未改，未重启现有服务，未提交或推送GitHub。

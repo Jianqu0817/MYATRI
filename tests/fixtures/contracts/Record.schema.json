@@ -44,7 +44,8 @@
         "human",
         "system",
         "model",
-        "human_import"
+        "human_import",
+        "self_initiated"
       ],
       "title": "Author Kind",
       "type": "string"

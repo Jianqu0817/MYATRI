@@ -102,15 +102,17 @@ def staged_distributions(tmp_path_factory):
                 for name in names:
                     candidate = Path(current) / name
                     if (name == "__pycache__" or candidate.is_symlink() or candidate.is_junction() or
-                            (directory == "src" and candidate.is_file() and candidate.suffix != ".py")):
+                            (directory == "src" and candidate.is_file() and candidate.suffix not in {".py", ".html"})):
                         ignored.append(name)
                 return ignored
             shutil.copytree(path, staging / directory, ignore=public_inputs_only)
     (staging / "config").mkdir()
-    for name in ("defaults.toml", "schedules.toml", "persona_template.md", "live.example.toml"):
+    for name in ("defaults.toml", "schedules.toml", "persona_template.md", "live.example.toml", "cli-engine.toml"):
         path = source / "config" / name
         if path.is_file():
             shutil.copyfile(path, staging / "config" / name)
+    (staging / "docs").mkdir()
+    shutil.copyfile(source / "docs/companion_port_source.json", staging / "docs/companion_port_source.json")
     # These explicit public role-card inputs are required by wheel force-include.
     role_source = source / "config/personas/xiaowennuan"
     role_target = staging / "config/personas/xiaowennuan"

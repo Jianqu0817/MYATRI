@@ -30,8 +30,8 @@ async def test_character_init_context_and_restart_preserve_provenance(tmp_path, 
     assert len(entries) == 15
     assert persona.author_kind == "human_import"
     assert "20岁" in entries["P01_identity"]
-    assert "幽默与玩梗 | 65" in entries["P06_expression"]
-    assert "猫咪行为 | 10" in entries["P06_expression"]
+    assert "对方抛梗就接，没梗不硬找" in entries["P06_expression"]
+    assert "猫咪行为 | 一期对话最多一两次" in entries["P06_expression"]
     assert "父母的姓名、职业和当前状况" in entries["P13_unknown"]
     assert "对话示例仅演示措辞" in entries["P00_provenance"]
     assert not store.list_records("event")

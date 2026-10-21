@@ -17,6 +17,13 @@ class IngestProgressPending(BudgetExceeded):
         super().__init__(message, reason="ingest_pending")
 
 
+class GroupAttributionError(ValueError):
+    """A candidate is unconfirmed, while other extracted candidates may be valid."""
+    def __init__(self, code, message):
+        super().__init__(message)
+        self.code = code
+
+
 def source_windows(text, *, max_bytes=3600, overlap_bytes=300):
     start = 0
     while start < len(text):
@@ -107,17 +114,17 @@ def _group_item(message, item, *, lexical_fixture=False):
     attribution = result.get("attribution", "self_report" if lexical_fixture else None)
     subject = result.get("subject_id", speaker if lexical_fixture else None)
     if speaker != source["sender_id"]:
-        raise ValueError("group memory speaker_id does not match transport source")
+        raise GroupAttributionError("speaker_mismatch", "group memory speaker_id does not match transport source")
     if attribution not in {"self_report", "reported"}:
-        raise ValueError("group memory requires explicit attribution")
+        raise GroupAttributionError("missing_attribution", "group memory requires explicit attribution")
     if attribution == "self_report" and subject != speaker:
-        raise ValueError("group self_report subject_id must equal speaker_id")
+        raise GroupAttributionError("self_report_subject_mismatch", "group self_report subject_id must equal speaker_id")
     known = set(source["known_member_ids"])
     if subject is not None and subject not in known:
-        raise ValueError("group memory subject_id is not a known member")
+        raise GroupAttributionError("unknown_subject", "group memory subject_id is not a known member")
     participants = result.get("participants") or [speaker]
     if any(participant not in known for participant in participants):
-        raise ValueError("group memory participants must be real known member IDs")
+        raise GroupAttributionError("unknown_participant", "group memory participants must be real known member IDs")
     result["participants"] = list(dict.fromkeys([speaker, *participants, *([subject] if subject else [])]))
     return result, {"speaker_id": speaker, "subject_id": subject, "attribution": attribution,
                     "confirmed": attribution == "self_report", "sender_name": source["sender_name"],
@@ -145,6 +152,27 @@ class ExperienceOrganizer:
 
     def _requires_review(self, source):
         return bool(source and (source.get("support_review") or getattr(self.gateway, "group_support_review", False)))
+
+    def _isolate_attribution(self, data, messages):
+        """Keep rejected candidates as audit data, never as downgraded facts.
+
+        Schema and exact quote validation still fail closed. Identity errors
+        alone are isolated so one invented participant cannot sink all peers.
+        """
+        by_ref = {message.ref: message for message in messages}
+        accepted, rejected = [], []
+        for index, item in enumerate(data["events"]):
+            ref = item.get("message_ref", messages[0].ref)
+            if ref not in by_ref:
+                raise ValueError("batch A1 references a message outside the source batch")
+            try:
+                _group_item(by_ref[ref], item)
+            except GroupAttributionError as error:
+                rejected.append({"index": index, "message_ref": ref, "status": "unconfirmed",
+                                 "reason_code": error.code, "candidate": item})
+            else:
+                accepted.append(item)
+        return {"events": accepted}, rejected
 
     async def _draft_response(self, request, identifier, enabled):
         if enabled:
@@ -264,17 +292,18 @@ class ExperienceOrganizer:
                 jsonschema.validate(data, schema)
                 available = {r["ref"] for r in selection.material}
                 for item in data["events"]:
-                    _group_item(next(message for message in messages if message.ref == item["message_ref"]), item)
                     if not any(row["ref"] == item["message_ref"] and item["quote"] in row["text"] for row in group):
                         raise ValueError("batch A1 quote outside the named original window")
                     if item.get("existing_event_ref") and item["existing_event_ref"] not in available:
                         raise ValueError("batch A1 references unshown prior event")
                 self._save_draft(key + "_draft", response, data, [*[r["ref"] for r in group], *available], review_enabled)
+                data, rejected = self._isolate_attribution(data, messages)
                 data, support = await self._review_support(data, messages)
                 checkpoint = Record(record_id=key, record_kind="cognitive_run", agent_id=self.store.agent_id,
                     user_id=self.store.user_id, source_refs=list(dict.fromkeys([*[r["ref"] for r in group], *available])),
                     payload={"role": "A1_batch", "output": data, "provider": response.provider,
-                             "model": response.model, "source_windows": group, "support_review": support})
+                             "model": response.model, "source_windows": group, "support_review": support,
+                             "rejected_candidates": rejected})
                 self.store.commit([checkpoint], key, expected={key: 0})
                 calls += 1
             checkpoints.append(checkpoint)
@@ -334,20 +363,23 @@ class ExperienceOrganizer:
                 review_enabled = self._requires_review(source)
                 response = await self._draft_response(request, chunk_id + "_draft", review_enabled)
                 data = json.loads(response.content)
+                import jsonschema
+                jsonschema.validate(data, EXPERIENCE_SCHEMA)
                 available = {row["ref"] for row in payload["existing_events"]}
                 for item in data["events"]:
-                    _group_item(message, item)
                     if item["quote"] not in fragment:
                         raise ValueError("A1 quote not found verbatim in persisted raw source window")
                     if item.get("existing_event_ref") and item["existing_event_ref"] not in available:
                         raise ValueError("A1 references an unshown old event")
                 self._save_draft(chunk_id + "_draft", response, data, [message.ref, *available], review_enabled)
+                data, rejected = self._isolate_attribution(data, [message])
                 data, support = await self._review_support(data, [message])
                 checkpoint = Record(record_id=chunk_id, record_kind="cognitive_run", agent_id=message.agent_id,
                     user_id=message.user_id, source_refs=[message.ref, *sorted(available)],
                     payload={"role": "A1_chunk", "message_ref": message.ref, "start": start, "end": end,
                         "output": data, "provider": response.provider, "model": response.model,
-                        "prompt_version": "experience/v1", "materials": payload["selection"], "support_review": support})
+                        "prompt_version": "experience/v1", "materials": payload["selection"], "support_review": support,
+                        "rejected_candidates": rejected})
                 self.store.commit([checkpoint], idempotency_key=chunk_id, expected={chunk_id: 0})
                 new_chunks += 1
             checkpoints.append(checkpoint)
@@ -387,10 +419,17 @@ class ExperienceOrganizer:
         coverage = ({"start": source["start"], "end": source["end"], "complete": True,
                      "scope": "only_current_transport_text", "recent_messages_extracted": False}
                     if source else {"start": 0, "end": len(message.body_markdown), "complete": True})
+        quarantined = [candidate for checkpoint in checkpoints
+                       for candidate in checkpoint.payload.get("rejected_candidates", [])
+                       if candidate["message_ref"] == message.ref]
+        coverage.update(validation_complete=not quarantined, quarantined_candidates=len(quarantined))
         run = Record(record_id=run_id, record_kind="cognitive_run", agent_id=message.agent_id,
                      user_id=message.user_id, source_refs=[message.ref, *[r.ref for r in checkpoints]],
-                     payload={"role": "A1", "snapshot": snapshot, "decision": "propose",
+                     payload={"role": "A1", "snapshot": snapshot,
+                              "decision": "propose_with_quarantine" if quarantined else "propose",
                               "source_coverage": coverage,
+                              "quarantine_refs": [r.ref for r in checkpoints
+                                  if any(c["message_ref"] == message.ref for c in r.payload.get("rejected_candidates", []))],
                               "limitations": ["群聊仅提交当前传输text，不覆盖recent_messages；非群聊为原文全文。完成不保证穷尽语义，原文完整保留。"]})
         records, expected = [run], {message.record_id: message.revision}
         by_fingerprint = {r.payload["event_fingerprint"]: r for r in existing}

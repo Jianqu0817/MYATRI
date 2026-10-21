@@ -109,6 +109,30 @@ class JobQueue:
         """Explicit operator retry; a saved proposal is reused unless discarded."""
         return self._operator_update(job_id, "retry_wait", clear_result=clear_result, now=now)
 
+    def retry_failed_once(self, job_id, recovery_version, *, now=None):
+        """Atomically allow one upgrade recovery of the same immutable job.
+
+        Attempts and saved results are retained. A subsequent failure is not
+        made free to retry by another process or a restart.
+        """
+        now = time.time() if now is None else now
+        name = "job_recovery:" + job_id + ":" + recovery_version
+        with self.db() as db:
+            db.execute("BEGIN IMMEDIATE")
+            row = db.execute("SELECT status FROM jobs WHERE id=? AND agent=? AND user=?",
+                             (job_id, self.agent_id, self.user_id)).fetchone()
+            if row is None:
+                raise KeyError(job_id)
+            if row[0] != "failed" or db.execute(
+                    "SELECT 1 FROM schedule WHERE agent=? AND user=? AND name=?",
+                    (self.agent_id, self.user_id, name)).fetchone():
+                return False
+            db.execute("INSERT INTO schedule VALUES(?,?,?,?)",
+                       (self.agent_id, self.user_id, name, json.dumps({"recovered_at": now})))
+            db.execute("UPDATE jobs SET status='retry_wait',available=?,owner=NULL,lease_until=NULL WHERE id=?",
+                       (now, job_id))
+            return True
+
     def cancel_job(self, job_id, *, reason="cancelled by operator", now=None):
         return self._operator_update(job_id, "cancelled", error=reason, now=now)
 

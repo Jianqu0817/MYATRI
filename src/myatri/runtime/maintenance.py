@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 
 from myatri.contracts import JobSpec, Proposal, digest
 from myatri.cognition.experience import ExperienceOrganizer
@@ -14,6 +15,8 @@ from myatri.cognition.theme import ThemeAgent
 
 
 class Maintenance:
+    RECOVERY_VERSION = "maintenance-recovery-v1"
+
     def __init__(self, app, turns, *, deep_every=1, persona_every=1):
         if not isinstance(turns, int) or isinstance(turns, bool) or not 0 <= turns <= 1000:
             raise ValueError("maintenance_turns must be an integer between 0 and 1000")
@@ -24,6 +27,13 @@ class Maintenance:
         self.lock = asyncio.Lock()
         self.last_schedule = None
 
+    def deferred_batches(self):
+        return self.app.queue.get_meta("maintenance_deferred_batches", {})
+
+    def _deferred_refs(self):
+        return {ref for item in self.deferred_batches().values() if item["status"] == "deferred"
+                for ref in item["input_refs"]}
+
     def pending(self):
         raw = self.app.store.list_records("raw_message")
         users = [r for r in raw if r.payload.get("role") == "user"]
@@ -33,19 +43,45 @@ class Maintenance:
             if not positions:
                 raise ValueError("maintenance cursor is missing from this isolated archive")
             users = users[positions[0] + 1:]
-        return users, raw
+        excluded = self._deferred_refs()
+        return [r for r in users if r.ref not in excluded], raw
+
+    def _recover_failed(self, jobs):
+        deferred = self.deferred_batches()
+        for job in jobs:
+            if job["role"] != "maintenance" or job["status"] != "failed":
+                continue
+            if job["id"] in deferred:
+                continue
+            if self.app.queue.retry_failed_once(job["id"], self.RECOVERY_VERSION):
+                return job["id"]
+            refs = json.loads(job["payload"])["input_refs"]
+            progress = self.app.queue.get_meta("maintenance_" + digest(refs)[:24], {})
+            deferred[job["id"]] = {
+                "status": "deferred", "input_refs": refs,
+                "reason_code": "maintenance_retry_exhausted",
+                "failed_stage": "memory" if not progress.get("memory") else "remaining_dependencies",
+                "repair_version": self.RECOVERY_VERSION,
+            }
+            self.app.queue.set_meta("maintenance_deferred_batches", deferred)
+        return None
 
     def schedule(self, *, force=False):
         if not self.turns:
             return None
+        jobs = self.app.queue.list_jobs()
+        if any(j["role"] == "maintenance" and j["status"] not in {"succeeded", "cancelled", "failed"}
+               for j in jobs):
+            return None
+        recovered = self._recover_failed(jobs)
+        if recovered:
+            self.last_schedule = None
+            return recovered
         stamp = (self.app.queue.get_meta("last_activity"), self.app.queue.get_meta("maintenance_cursor"))
         if not force and self.last_schedule == stamp:
             return None
         self.last_schedule = stamp
-        # One in-flight batch per domain; its immutable refs define the cutoff.
-        if any(j["role"] == "maintenance" and j["status"] not in {"succeeded", "cancelled"}
-               for j in self.app.queue.list_jobs()):
-            return None
+        # One in-flight batch per domain; failed isolated cutoffs are explicit.
         users, raw = self.pending()
         answered = {r.payload.get("reply_to") for r in raw if r.payload.get("role") == "assistant"}
         completed = 0
@@ -59,6 +95,8 @@ class Maintenance:
     async def before_compact(self):
         if not self.turns:
             return
+        if self._deferred_refs():
+            raise ValueError("maintenance has deferred source batches; resolve them before compaction")
         users, _ = self.pending()
         if users or self.app.queue.get_meta("deep_pending_messages", []) or self.app.queue.get_meta("persona_pending_messages", []):
             # Includes the newest not-yet-answered user input. A failure leaves
@@ -77,6 +115,12 @@ class Maintenance:
         async with self.lock:
             users, raw = self.pending()
             allowed = set(refs)
+            # Explicit operator retry can resume a deferred cutoff even after
+            # newer batches advanced the ordinary scheduling cursor.
+            deferred_refs = self._deferred_refs().intersection(allowed)
+            pending_refs = {m.ref for m in users}
+            users = [r for r in raw if r.payload.get("role") == "user"
+                     and (r.ref in pending_refs or r.ref in deferred_refs)]
             messages = [r for r in users if r.ref in allowed]
             pending_deep = self.app.queue.get_meta("deep_pending_messages", [])
             pending_persona = self.app.queue.get_meta("persona_pending_messages", [])
@@ -106,6 +150,20 @@ class Maintenance:
             commit = self.app.committer.submit_proposal
             if messages:
                 await stage("memory", lambda: ExperienceOrganizer(self.app.store, self.app.gateway).organize_batch(messages, commit))
+                # Project only known runs from this cutoff, never scan the
+                # archive. Assign by immutable run ref so replays do not add.
+                quarantine_counts = self.app.queue.get_meta("a1_quarantine_counts", {})
+                for message in messages:
+                    run_id = "run_exp_" + digest({"message": message.ref, "version": "v1"})[:24]
+                    try:
+                        run = self.app.store.get_record(run_id)
+                    except KeyError:
+                        continue
+                    count = run.payload.get("source_coverage", {}).get("quarantined_candidates", 0)
+                    if type(count) is int and count > 0:
+                        quarantine_counts[run.ref] = count
+                if quarantine_counts:
+                    self.app.queue.set_meta("a1_quarantine_counts", quarantine_counts)
             message_refs = {r.ref for r in messages}
             events = [r for r in self.app.store.list_records("event") if message_refs.intersection(r.source_refs)]
             event_refs = [r.ref for r in events]
@@ -174,11 +232,24 @@ class Maintenance:
             # The cursor advances only after memory, state, emotion and review
             # dependencies completed or explicitly deferred with durable runs.
             self.app.store.flush_projection()
+            positions = {r.ref: i for i, r in enumerate(raw) if r.payload.get("role") == "user"}
+            old_cursor = self.app.queue.get_meta("maintenance_cursor")
+            cursor = max([r.ref for r in messages] + ([old_cursor] if old_cursor else []),
+                         key=lambda ref: positions[ref], default=None)
+            deferred = self.deferred_batches()
+            for item in deferred.values():
+                if item["status"] == "deferred" and set(item["input_refs"]).issubset(message_refs):
+                    item["status"] = "recovered"
+            def pending_after(key, planned, completed):
+                current = self.app.queue.get_meta(key, [])
+                return ([ref for ref in current if ref not in set(planned)] if completed
+                        else list(dict.fromkeys([*current, *planned])))
             self.app.queue.set_meta_many({
-                "maintenance_cursor": messages[-1].ref if messages else self.app.queue.get_meta("maintenance_cursor"),
-                "maintenance_batch_count": plan["number"],
-                "deep_pending_messages": [] if plan["deep_due"] else plan["deep_messages"],
-                "persona_pending_messages": [] if plan["persona_due"] else plan["persona_messages"],
+                "maintenance_cursor": cursor,
+                "maintenance_batch_count": max(plan["number"], self.app.queue.get_meta("maintenance_batch_count", 0)),
+                "maintenance_deferred_batches": deferred,
+                "deep_pending_messages": pending_after("deep_pending_messages", plan["deep_messages"], plan["deep_due"]),
+                "persona_pending_messages": pending_after("persona_pending_messages", plan["persona_messages"], plan["persona_due"]),
                 "last_maintenance": {"reason": reason, "message_refs": [r.ref for r in messages],
                                      "event_refs": event_refs, "stages": progress}})
             return {"kind": "maintenance_done", "message_refs": [r.ref for r in messages]}

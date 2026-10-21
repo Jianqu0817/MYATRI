@@ -121,7 +121,25 @@ async def test_review_disabled_preserves_single_extraction_call(tmp_path, batch)
 async def test_invalid_self_report_subject_rejected_before_review(tmp_path, batch):
     provider = SyntheticReviewProvider(subject="person-b")
     store, message, organizer = setup_review(tmp_path, provider)
-    with pytest.raises(ValueError, match="subject_id"):
-        await organize(organizer, store, message, batch)
+    await organize(organizer, store, message, batch)
     assert not store.list_records("event")
+    assert not store.list_records("interpretation")
     assert [r.purpose for r in provider.requests] == ["A1_batch" if batch else "A1"]
+    runs = store.list_records("cognitive_run")
+    checkpoint = next(r for r in runs if r.payload.get("role") == ("A1_batch" if batch else "A1_chunk"))
+    assert checkpoint.payload["output"]["events"] == []
+    assert checkpoint.payload["support_review"] is None
+    rejected = checkpoint.payload["rejected_candidates"]
+    assert len(rejected) == 1
+    assert rejected[0]["status"] == "unconfirmed"
+    assert rejected[0]["reason_code"] == "self_report_subject_mismatch"
+    assert rejected[0]["message_ref"] == message.ref
+    assert rejected[0]["candidate"]["speaker_id"] == "person-a"
+    assert rejected[0]["candidate"]["subject_id"] == "person-b"
+    assert rejected[0]["candidate"]["quote"] == "我喜欢红茶"
+    run = next(r for r in runs if r.payload.get("role") == "A1")
+    assert run.payload["decision"] == "propose_with_quarantine"
+    assert run.payload["source_coverage"]["validation_complete"] is False
+    assert run.payload["source_coverage"]["quarantined_candidates"] == 1
+    assert run.payload["quarantine_refs"] == [checkpoint.ref]
+    assert store.verify_archive() == []

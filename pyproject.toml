@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "myatri"
-version = "0.2.7"
+version = "0.2.8"
 description = "Persistent evidence-grounded character memory and gradual persona evolution"
 requires-python = ">=3.12,<3.13"
 dependencies = [

@@ -44,6 +44,7 @@ asyncio_mode = "auto"
 [tool.hatch.build]
 exclude = [
     "/var", "/.venv", "/dist", "**/__pycache__", "**/*.pyc",
+    "**/*.local.json",
     "/reports/*_tmp*/**", "/reports/fix_context_tmp_20261020/**",
     "/reports/package_smoke_0.1.1.json",
     "/reports/emotion_package_smoke.json",
@@ -72,7 +73,7 @@ exclude = [
 
 [tool.hatch.build.targets.sdist]
 include = [
-    "/src", "/prompts", "/config/defaults.toml", "/config/schedules.toml", "/config/cli-engine.toml", "/Monitor-Context.cmd", "/View-Context.cmd",
+    "/config/harness", "/src", "/prompts", "/config/defaults.toml", "/config/schedules.toml", "/config/cli-engine.toml", "/Monitor-Context.cmd", "/View-Context.cmd", "/Harness.cmd",
     "/config/persona_template.md", "/config/live.example.toml", "/config/personas", "/docs", "/tests", "/scripts",
     "/reports", "/evals", "/LICENSES", "/THIRD_PARTY_NOTICES.md", "/README.md", "/情绪模块开发.md", "/启动MYATRI.cmd", "/启动小温暖.cmd", "/pyproject.toml", "/uv.lock", "/.gitignore", "/.gitattributes",
 ]

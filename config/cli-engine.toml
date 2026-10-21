@@ -102,6 +102,7 @@ engine_config = "config/cli-engine.toml"
 
 [companion.web]
 enabled = false
+backend = "deepseek-api"
 node_path = ""
 bin_path = ""
 timeout_seconds = 25
@@ -117,3 +118,15 @@ active_start = "09:00"
 active_end = "23:30"
 min_interval_minutes = 20.0
 max_interval_minutes = 90.0
+
+[companion.computer]
+enabled = false
+agent_enabled = false
+permission_profile = "full"
+owner_id = ""
+node_path = ""
+runtime_root = ""
+native_config = "config/harness/executor.local.json"
+
+[companion.recovery]
+enabled = true

@@ -1,5 +1,19 @@
 # MYATRI HANDOFF
 
+## FULL-HARNESS-PORT（2026-10-22）
+
+用户在要求AstrBot通用Harness后，又明确要求可移植改动接回内核并推送两个GitHub；因此本轮核心修改有直接授权。先读 [最新说明](../Harness通用执行与双仓迁移_2026-10-22.md) 与docs/harness_port_source.json。原guide未丢弃，新增入口指向本轮实现。src/myatri/companion下迁入computer_*、harness、prompts、deepseek_web、runtime_controls、control_proxy、monitor_stats、memory_repair、maintenance、recovery，桥/HTTP/阅读/监视对应接线保持core专有适配。
+
+特别保留CliRuntime._application_location、PrivateRecall、原库provider budget、_health_snapshot及CLI端口/配置路由。control_proxy从config/cli.local.toml读活跃实例；监视从同一项目选CLI库，不读相邻AstrBot。BridgeMaintenance.run取本库0.3.0源码，继续is_human_message门控，测试fixture补明确human来源而未削弱验证器。公开companion.web默认deepseek-api，DSH显式回退；搜索次数仍独立限额。核心没有attention.py/attention配置，群唤醒关注只在AstrBot。
+
+独立var/harness已从锁安装；本机computer与既有CLI owner双固定，agent_enabled=true/profile=full。旧bounded合同保持原权限。执行使用当前账户无命令路径白名单，不能说是沙箱；模型请求共用CLI原provider账本，工具进程没有注入聊天Key。通过MCP或shell可扩展应用，read_image/视觉并未验证。安装脚本识别companion配置，Harness.cmd只默认版本查询，不冒充聊天共享预算入口。
+
+749完整/100最终通过，检查重叠不相加，Ruff限移植代码和新脚本；core旧CLI历史风格问题不扩修。wheel/sdist与native资源核验通过。没有读取/复制生产记忆，无手工付费模型调用或消息发送，没有重启私聊服务；下次正常启动新完整CLI生效。GitHub同步获显式授权，源码/公开lock/指南上传，本机*.local.toml/json与var不上传。最终commit见本轮最后回复或远端main。
+
+## 新Agent阅读入口（2026-10-22）
+
+先读 docs/项目总览与Agent维护指南.md，再读本文件最新条目和STATUS。指南以0.3.0/f2a6d36为代码基线，区分已实现机制、上次656项离线验证证据和长期语义未验收；本轮只写文档，未重启、调用API或推送。历史手册的1M日预算、20轮维护、私聊无控制按钮等描述不能作为新版事实；实际配置由CLI选择单个TOML，旧local不会自动继承公开模板更新。
+
 ## CLI-COMPANION-0.3.0（2026-10-22，迁移完成并按授权同步GitHub）
 
 先发布AstrBot main 4b2fd3eb752e8e81805e26bb9e5a8411c20a6bc6（433项通过）；随后迁入MYATRI完整CLI运行时，用户明确只迁功能和角色卡、保留原CLI记忆，不导入群档案。核心升0.3.0；用户随后明确要求推送，本次同步到核心main分支，最终提交见Git历史。

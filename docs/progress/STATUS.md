@@ -1,5 +1,19 @@
 # MYATRI STATUS
 
+## FULL-HARNESS-PORT（2026-10-22）
+
+本轮用户先要求取消便签/应用白名单、充分使用Harness命令行工具，后明确授权移植可移植改动到原核心并上传两个GitHub。full采用当前Windows账户权限，没有命令/路径/应用白名单；保留稳定owner绑定、持久claim/回执、共享预算及停止能力。官方PowerShell、读写编辑、glob/grep、jobs、cwd、todo、skill、MCP已接入；绝对路径编辑、真实Shell、后台输出、取消停止及离线MCP调用均有实测。模型均为fixture，没有手工付费验收或真实群测试发送。
+
+移入src/myatri/companion：通用执行Agent/提示词/官方Harness工具、直连DeepSeek搜索、Token/记忆/PAD监测、运行设置与有限修复。保留CLI私聊位置/身份、provider账本、8776–8778接口及0.3.0人类证据门控；maintenance镜像采用当前core.run并有AST对照，不用冻结0.2.8覆盖它。未迁入AstrBot唤醒后关注功能、微信群运行库或任何密钥，未反向替换桥vendor。
+
+已独立安装Harness0.2.1-rc.2并在本机companion.computer启用full，owner沿用原CLI固定身份。公开配置关闭，正常下次启动完整CLI生效，本轮没有重启私聊服务。安装/直达入口为setup_computer_control.py --full、Harness.cmd；本机MCP配置*.local.json不上传也不打包。原有指南文档工作树保留并补最新入口。
+
+完整749项通过（502.51秒），最终相关100项通过（34.24秒），与完整回归重叠不相加。移植模块/测试/新脚本Ruff、JS、wheel/sdist资产与私密文件排除通过；98项先行检查不额外相加。仓库待提交内容常见凭据扫描零命中。source/target哈希在docs/harness_port_source.json；推送main由本轮用户明确授权，最终sha及结果见Git历史/最后回复。详见 [通用执行与双仓边界](../Harness通用执行与双仓迁移_2026-10-22.md)。
+
+## AGENT-GUIDE（2026-10-22）
+
+新增 docs/项目总览与Agent维护指南.md 并在README顶部链接，作为后续Agent首读入口。按0.3.0/f2a6d36源码核对完整CLI与legacy路径、单文件配置选择、原库/侧车边界、prompt定位、维护/恢复/测试/发布流程与未验证部分；特别标明磁盘卡重载会创建持久人格新版本，清窗不删除长期记忆。仅文档变更，未运行生产服务、调用API或推送；后续改动请同步维护指南对应章节。
+
 ## CLI-COMPANION-0.3.0（2026-10-22，迁移完成并按授权同步GitHub）
 
 先发布AstrBot main 4b2fd3eb752e8e81805e26bb9e5a8411c20a6bc6（433项通过）；随后迁入MYATRI完整CLI运行时，用户明确只迁功能和角色卡、保留原CLI记忆，不导入群档案。核心升0.3.0；用户随后明确要求推送，本次同步到核心main分支，最终提交见Git历史。

@@ -14,49 +14,49 @@
       "source": "src/myatri_bridge/bridge.py",
       "target": "src/myatri/companion/bridge.py",
       "source_sha256": "e08eb82642ec865a8418c25b8b316311f0ca1073a6c1f293183fba93403e6c74",
-      "target_sha256": "0830efdc48c6bfbdc50d4f9bd03f4e67f6d9a3d92a606f1b3d72fe4b5bd56114"
+      "target_sha256": "e8b2de29f76afda26e887c4d6f45094cd63a59e7b30080adde3c9d28aa9ad6f6"
     },
     {
       "source": "src/myatri_bridge/reading_conversation.py",
       "target": "src/myatri/companion/reading_conversation.py",
-      "source_sha256": "04b6078591727192ab0ea1758bb2e2e7a56aca370bba0e95cb7437b9d30bb158",
-      "target_sha256": "58f9e1f77195afa52104ea33762d878f21eb478d549b7f34f1e33d79bb385bf7"
+      "source_sha256": "346c9bb2f60679b8f074e7c3e50bf43c71b1ee41003ab112424a3bca1d102050",
+      "target_sha256": "5df0ed85cf6ee5cd09010e293d15a087f8b7877b3a879b3fca256656f434bf8d"
     },
     {
       "source": "src/myatri_bridge/web_tools.py",
       "target": "src/myatri/companion/web_tools.py",
       "source_sha256": "69f2d65ce8be8bfac50d867198e6379fbb1d5f7316392f6a77bd596b1d8a750f",
-      "target_sha256": "4282e0bb5d100568ff5c09f0ab5e8d0f65decc15a474f07802a7847f546d4c14"
+      "target_sha256": "69f2d65ce8be8bfac50d867198e6379fbb1d5f7316392f6a77bd596b1d8a750f"
     },
     {
       "source": "src/myatri_bridge/deepseek_web.py",
       "target": "src/myatri/companion/deepseek_web.py",
-      "source_sha256": "fdb4a86063e14fd8d4f870c2fee898b761093470e633791c1f024dcbb1182c17",
-      "target_sha256": "fdb4a86063e14fd8d4f870c2fee898b761093470e633791c1f024dcbb1182c17"
+      "source_sha256": "e5c48b43b919357af447a052b2f3498a44bd0e2c33773afa25b40b45c45f808a",
+      "target_sha256": "e5c48b43b919357af447a052b2f3498a44bd0e2c33773afa25b40b45c45f808a"
     },
     {
       "source": "src/myatri_bridge/computer_agent.py",
       "target": "src/myatri/companion/computer_agent.py",
       "source_sha256": "d31872cebf3af5b0d1022f0534c7db36464a99662814e9f38556df2a38b384db",
-      "target_sha256": "6a5b5a035560eb620cc88422fe81fba862ff09d2bf1f28e2e530ddbbdbf8af48"
+      "target_sha256": "d31872cebf3af5b0d1022f0534c7db36464a99662814e9f38556df2a38b384db"
     },
     {
       "source": "src/myatri_bridge/computer_control.py",
       "target": "src/myatri/companion/computer_control.py",
-      "source_sha256": "e3d8dc807f355dc6bc4cdda108ab0442f12dc7e14fc79f07c810c21a20811404",
-      "target_sha256": "e3d8dc807f355dc6bc4cdda108ab0442f12dc7e14fc79f07c810c21a20811404"
+      "source_sha256": "38630ebc5ae76314719a3bbbe6f34ae06ed4c5afafa2564d85ffe2932819b741",
+      "target_sha256": "38630ebc5ae76314719a3bbbe6f34ae06ed4c5afafa2564d85ffe2932819b741"
     },
     {
       "source": "src/myatri_bridge/computer_tasks.py",
       "target": "src/myatri/companion/computer_tasks.py",
       "source_sha256": "822c17d7c259eeef29e54434adc1ead3d3d891f3703c4f76ba3cc9f96b5e050c",
-      "target_sha256": "01f0d1a2b4125e64ef6766e40d4dc09ee119cb397858890f5fc1e5e9a712fb6d"
+      "target_sha256": "822c17d7c259eeef29e54434adc1ead3d3d891f3703c4f76ba3cc9f96b5e050c"
     },
     {
       "source": "src/myatri_bridge/computer_tools.py",
       "target": "src/myatri/companion/computer_tools.py",
       "source_sha256": "c2359ced5d8ac25d94c9c445b2b698d4692618f0747fb26e193dba001d48a0c7",
-      "target_sha256": "964c3a79faa090cc289aa49f60b71dd3bdb5a339ee303b9e0c3fbd00c9fe9e60"
+      "target_sha256": "c2359ced5d8ac25d94c9c445b2b698d4692618f0747fb26e193dba001d48a0c7"
     },
     {
       "source": "src/myatri_bridge/computer_full.py",
@@ -68,61 +68,61 @@
       "source": "src/myatri_bridge/control_proxy.py",
       "target": "src/myatri/companion/control_proxy.py",
       "source_sha256": "d3988e4dc320f10b01f698c5c3a98f594aa9217b62596774c17022cdb92bc02f",
-      "target_sha256": "0135f8b180b339cb33fad61928e5d65a4790d6dc84f7c974fd9fd84e4060ff5d"
+      "target_sha256": "8704621f19c51253309a102964f7a7083256a8e38c10ea2f47499846977410bb"
     },
     {
       "source": "src/myatri_bridge/runtime_controls.py",
       "target": "src/myatri/companion/runtime_controls.py",
       "source_sha256": "107c4cea138d857aaf004bb3fee3d8cf3157af15badd19d8414b8fa041887ff0",
-      "target_sha256": "089f079a86ae0ea00d6a458411b2a8bbbc26420ee4dedf016a012e5c70e7e3b6"
+      "target_sha256": "107c4cea138d857aaf004bb3fee3d8cf3157af15badd19d8414b8fa041887ff0"
     },
     {
       "source": "src/myatri_bridge/recovery.py",
       "target": "src/myatri/companion/recovery.py",
       "source_sha256": "c9f27d3f0836cdeee5be344e2ee28908eb11d84a4ac2a72dd58d402a1559139a",
-      "target_sha256": "2becbfdb78e15b9b6cfcfd78982a2728611de198a188911a74ca87331af91ec8"
+      "target_sha256": "c9f27d3f0836cdeee5be344e2ee28908eb11d84a4ac2a72dd58d402a1559139a"
     },
     {
       "source": "src/myatri_bridge/memory_repair.py",
       "target": "src/myatri/companion/memory_repair.py",
       "source_sha256": "ef9a7cfdb7d73e83df3ad6a8889597ef3601cdb649bfb2ee91c963dc4af6ba9e",
-      "target_sha256": "baeda3624e7206ee180c1ce8c6b74da79e8bc2c2b105c8b132b41b3220c097ce"
+      "target_sha256": "ef9a7cfdb7d73e83df3ad6a8889597ef3601cdb649bfb2ee91c963dc4af6ba9e"
     },
     {
       "source": "src/myatri_bridge/maintenance.py",
       "target": "src/myatri/companion/maintenance.py",
-      "source_sha256": "49713f28b78b680b1179bbc96bbf19f0de6643d13a22488213ac5e811f4595b7",
-      "target_sha256": "b1122b0574f390fe490db9a9b5f17aaafcb384b6c0a74e77d0ed3350069d04b9"
+      "source_sha256": "0bb6a922162b572b0a886afaaa7025d15b8a788f495a211582df604f9bd0dc30",
+      "target_sha256": "da725580e0b517ab767857fbe54bd8d4617907bff7f2d535a6da15a9630b5c3b"
     },
     {
       "source": "src/myatri_bridge/monitor.py",
       "target": "src/myatri/companion/monitor.py",
-      "source_sha256": "371f61bd8c9e8320b07a3e78180f4b79d4d2ccd23cc5fd1586c80ee8717092e5",
-      "target_sha256": "c5ff56aaadb0dbe00a970483f606e3a16898d1eca36a157c9c23d8cc223a5f95"
+      "source_sha256": "5af40ba2aac1cf0552db9c3f6e9eccd7291c5e5bd254b783838e1db4a7768858",
+      "target_sha256": "c424e592cfdb3e02611a9f92232a76c86f83c92689a4e60139f2f360335461be"
     },
     {
       "source": "src/myatri_bridge/monitor_stats.py",
       "target": "src/myatri/companion/monitor_stats.py",
       "source_sha256": "a941783d418d850d63f31d5aaa435087ce2695a07a2be9a72cdf830576a1b6f0",
-      "target_sha256": "c907bab468a64508986d8f349e3400702f9b0bfb0246a43911ac121c3507c348"
+      "target_sha256": "a941783d418d850d63f31d5aaa435087ce2695a07a2be9a72cdf830576a1b6f0"
     },
     {
       "source": "src/myatri_bridge/monitor.html",
       "target": "src/myatri/companion/monitor.html",
-      "source_sha256": "dc385d1c57b8a9cea4c54ec043441c94e85cc1f7c13f142b9a49979641a48c62",
-      "target_sha256": "bc0fc3f89636159b577a14510b941a79c2ab5c69640fb9198550b3ca95b3b203"
+      "source_sha256": "647f692794af593d03851a438701ff30d6406a1fe34a9f025e45c1be81f5385e",
+      "target_sha256": "f648dc413fee543caf8d5df04b259e8bdf6a3adf337422f9202ec23ecd959c3b"
     },
     {
       "source": "src/myatri_bridge/server.py",
       "target": "src/myatri/companion/server.py",
-      "source_sha256": "1b8594f393f92ea75835e24cca95e6c42e354329e0a7831f5e422cfa28a40844",
-      "target_sha256": "1b8594f393f92ea75835e24cca95e6c42e354329e0a7831f5e422cfa28a40844"
+      "source_sha256": "8a7392f2541e5949c60b58f19989e9c8c8f5350f2b1e1511d858bbc95b88a516",
+      "target_sha256": "8a7392f2541e5949c60b58f19989e9c8c8f5350f2b1e1511d858bbc95b88a516"
     },
     {
       "source": "src/myatri_bridge/health.py",
       "target": "src/myatri/companion/health.py",
       "source_sha256": "e0832f0f740122add3c3a81fade908eefc99a4357c716fb9db9215bb1f7d84e8",
-      "target_sha256": "b4c3bd24a29f6ad32b5b2366a63ad4298a5dd4425d139371ce9772e02983e3ba"
+      "target_sha256": "af6ceedc1816376d945956bc0fd424c741ebde5c2b7a5da11fe0fa8b59e926e0"
     },
     {
       "source": "src/myatri_bridge/harness/computer-runner.mjs",
@@ -139,8 +139,8 @@
     {
       "source": "src/myatri_bridge/harness/task-agent.mjs",
       "target": "src/myatri/companion/harness/task-agent.mjs",
-      "source_sha256": "6de86847f83477f5e631d51ef3074e4aa4daab718034ac89270b87ddeee39a2f",
-      "target_sha256": "6de86847f83477f5e631d51ef3074e4aa4daab718034ac89270b87ddeee39a2f"
+      "source_sha256": "c91e7fb63d57450b7d3e10fa86d7cda76cf3333dece957984efb13c0ace7d226",
+      "target_sha256": "c91e7fb63d57450b7d3e10fa86d7cda76cf3333dece957984efb13c0ace7d226"
     },
     {
       "source": "src/myatri_bridge/harness/windows-uia.ps1",
@@ -160,5 +160,8 @@
       "source_sha256": "61176787d50322d12a0776b6e5eb35d8995a6b600653236643b6b0d9844da236",
       "target_sha256": "61176787d50322d12a0776b6e5eb35d8995a6b600653236643b6b0d9844da236"
     }
-  ]
+  ],
+  "hash_basis": "Git committed blob bytes; working-tree line endings may differ",
+  "source_revision": "a939b550683f581e0d0ba3dfd18a6d3a387372a3",
+  "target_code_revision": "48e0fdf30181ca13012a0f0c1cee5ebab73da1ed"
 }

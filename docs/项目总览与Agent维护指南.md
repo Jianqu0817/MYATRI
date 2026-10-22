@@ -1,5 +1,7 @@
 # MYATRI 项目总览与 Agent 维护指南
 
+2026-10-22增量：已同步 AstrBot 的 Harness 同轮结果回传、完成校验及分段修复，详见 [结果回传移植](Harness结果回传移植_2026-10-22.md)。新增 companion/computer_reporting.py 负责恢复原工具协议，不单独生成第二段报告对话；CliRuntime 轮询任务报告且重启保留待续接协议。原档案位置、PrivateRecall、atri/local身份和provider账本保持。AstrBot 同库终端模式切换入口不移入本库。
+
 2026-10-22追加：已按用户授权迁入通用Harness执行器、直连搜索、今日Token/记忆情绪监测及有限恢复，详见[最新移植说明](Harness通用执行与双仓迁移_2026-10-22.md)。companion/computer_agent.py与harness/native-tools.mjs为新定位入口；本机使用full模式，公开默认关闭。执行工具不再局限于便签；所有模型调用仍走原CLI账本。AstrBot唤醒后1–4条消息的关注功能不移入本库。下文历史模块表未列的新入口以本条和progress最新记录为准。
 
 

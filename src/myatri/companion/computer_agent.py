@@ -110,15 +110,20 @@ class ComputerAgent:
         if self.enabled and self.worker is None:
             self.worker = asyncio.create_task(self.loop())
 
-    def submit(self, source, task_id):
+    def submit(self, source, task_id, *, instructions='', reply_mode='background'):
         if not self.enabled or not self.computer.authorized(source):
             return {"error": "computer_owner_required"}
-        command = source["text"].strip()[3:].strip()
+        from .computer_control import command_body
+        command = command_body(source["text"])
+        if command is None and (not isinstance(instructions, str) or not instructions.strip()):
+            return {'error': 'invalid_execution_instructions'}
         scope = digest([source["platform_id"], source["bot_id"], source["group_id"]])[
             :32
         ]
-        if command.startswith("任务 "):
-            goal = command[3:].strip()
+        if command is None or command.startswith("任务 "):
+            if not isinstance(instructions, str) or len(instructions) > 6000:
+                return {'error': 'invalid_execution_instructions'}
+            goal = source['text'].strip() if command is None else command[3:].strip()
             if not goal or len(goal) > 6000:
                 return {"error": "invalid_task_goal"}
             try:
@@ -161,6 +166,12 @@ class ComputerAgent:
                 "arbitrary_commands": self.profile == "full",
                 "prompt": self.prompt,
                 "goal": goal,
+                "delegation": instructions[:6000],
+                "report_to_chat": reply_mode != 'conversation',
+                "reply_mode": reply_mode,
+                "channel_source": {k: source[k] for k in (
+                    'platform_id', 'bot_id', 'group_id', 'sender_id', 'message_id', 'text',
+                    'sender_name', 'sent_at') if k in source},
             }
             if self.profile == "full":
                 contract["limits"] = {
@@ -262,13 +273,20 @@ class ComputerAgent:
             await self.process.wait()
         self.process = None
 
-    async def _model(self, task, options):
+    async def _model(self, task, options, *, completion_only=False):
         row = self.store.get(task)
         limits = json.loads(row["contract"])["limits"]
         if row["state"] != "running" or row["calls"] >= limits["calls"]:
             return {"error": "task_stopped_or_call_limit"}
+        messages = model_messages(options["messages"])
+        for message in messages:
+            if message['role'] == 'tool':
+                # Put the canonical ID next to the result, so the model need not
+                # infer a label such as pwsh-1 from its own prose.
+                message['content'] = json.dumps({'host_receipt_id': message['tool_call_id'],
+                    'result': message['content']}, ensure_ascii=False)
         request = ModelRequest(
-            messages=model_messages(options["messages"]),
+            messages=messages,
             tools=[
                 {"type": "function", "function": t} for t in options.get("tools", [])
             ],
@@ -303,6 +321,22 @@ class ComputerAgent:
             return {"error": "model_unavailable_or_budget_exhausted"}
         charged = gateway._charged_tokens(response, estimate)
         self.store.charge(task, 0, charged - estimate)
+        if completion_only and any(c['function']['name'] != 'finish_task' for c in response.tool_calls):
+            return {'error': 'finish_task_required_no_new_actions'}
+        if json.loads(row['contract']).get('profile') == 'full' and not response.tool_calls:
+            if response.content:
+                self.store.save_draft(task, response.content)
+            if not completion_only:
+                # One bounded, budgeted closure request; expose only finish_task
+                # so a missing completion call cannot rerun successful actions.
+                closure = {'role': 'user', 'content': [{'type': 'text', 'text':
+                    '宿主收尾提醒：报告已经保留，但任务尚未完成校验。现在只调用finish_task，'
+                    '用真实回执核验并总结；不要重新执行命令。不能验证则说明具体原因并用blocked。'
+                    '真实回执ID：' + json.dumps(self.store.receipt_ids(task))}]}
+                return await self._model(task, {'tools': [FULL_FINISH], 'messages': [
+                    *options['messages'],
+                    {'role': 'assistant', 'content': [{'type': 'text', 'text': response.content or ''}]},
+                    closure]}, completion_only=True)
         blocks = []
         if response.content:
             blocks.append({"type": "text", "text": response.content})
@@ -344,7 +378,30 @@ class ComputerAgent:
         try:
             tools.deadline = time.monotonic() + 20
             if name == "finish_task":
-                checks = [tools.verify(check) for check in args["checks"]]
+                if isinstance(tools, FullComputerTools) and args['status'] == 'completed':
+                    checks = []
+                    for check in args['checks']:
+                        try:
+                            checks.append(tools.verify(check))
+                        except (ValueError, KeyError, OSError):
+                            checks.append({'kind': check['kind'], 'passed': False,
+                                           'error': 'check_or_receipt_not_found'})
+                    if not checks or not all(c['passed'] for c in checks):
+                        failures = self.store.completion_errors(task) + 1
+                        result = {'error': 'completion_verification_failed', 'checks': checks,
+                                  'available_receipt_ids': self.store.receipt_ids(task),
+                                  'suggestion': '修正完成检查后再次调用finish_task；从host_receipt_id或available_receipt_ids逐字复制真实call_id，不能编造pwsh-1；只需修正引用，不要重做已成功操作。空checks不能确认完成。',
+                                  'end_turn': failures >= 3}
+                        if failures >= 3:
+                            result['state'] = 'blocked'
+                            result['reason'] = 'completion_verification_failed'
+                            self.store.finish(task, packet['call_id'], result,
+                                args['summary'] + '\n宿主说明：完成校验连续失败，需修正回执引用或检查项，不代表用户缺少授权。')
+                        else:
+                            self.store.receipt(task, packet['call_id'], result)
+                        return result
+                else:
+                    checks = [tools.verify(check) for check in args["checks"]]
                 complete = (
                     args["status"] == "completed"
                     and bool(checks)
@@ -529,12 +586,14 @@ class ComputerAgent:
                 await asyncio.gather(read_task, return_exceptions=True)
         state = self.store.get(task)["state"]
         if state in {"running", "pausing", "cancelling"}:
+            draft = self.store.get(task)['summary']
             self.store.state(
                 task,
                 {"running": "blocked", "pausing": "paused", "cancelling": "cancelled"}[
                     state
                 ],
-                "执行回合已停止；以工具回执及独立检查为准。",
+                (draft + '\n宿主说明：执行回合已停止，尚未提交有效完成校验；以上为未验证报告。')
+                if state == 'running' and draft else "执行回合已停止；以工具回执及独立检查为准。",
             )
 
     async def loop(self):

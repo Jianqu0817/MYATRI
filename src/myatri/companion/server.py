@@ -177,7 +177,8 @@ def create_app(bridge, token):
         if task:
             if len(task)!=64 or any(c not in '0123456789abcdef' for c in task):
                 raise ValueError('invalid_task')
-            return web.json_response({'ok':True,'task':agent.store.details(task)})
+            return web.json_response({'ok':True,'task':agent.store.details(task) |
+                                     {'chat_report': bridge.computer_reports.status(task)}})
         return web.json_response({'ok':True,'enabled':True,'permission_profile':agent.profile,'tasks':agent.store.list()})
 
     async def startup(app):

@@ -177,6 +177,151 @@ async def test_owner_scope_dedupe_and_no_group_private_results(tmp_path):
 
 
 @pytest.mark.skipif(not NODE.exists(), reason="isolated Harness runtime not installed")
+async def test_at_memory_request_reaches_real_native_shell_without_paid_model(tmp_path):
+    a = agent(tmp_path, [
+        tool_response("pwsh", {
+            "description": "Read physical memory capacity",
+            "command": "[pscustomobject]@{memory_bytes=(Get-CimInstance Win32_ComputerSystem).TotalPhysicalMemory} | ConvertTo-Json -Compress",
+        }, "memory-query"),
+        tool_response("finish_task", {
+            "status": "completed", "summary": "已用系统接口查询内存容量，数据留本机回执。",
+            "checks": [{"kind": "receipt_success", "call_id": "memory-query"},
+                       {"kind": "receipt_contains", "call_id": "memory-query", "text": "memory_bytes"}],
+        }, "memory-finish"),
+    ], profile="full")
+    s = source(text="@小溫暖\u2005/pc 任务 查询当前内存容量")
+    key = task_key(s)
+    try:
+        raw = SimpleNamespace(author_kind="human", payload={"channel_source": s})
+        receipt = await a.computer.for_turn(raw)["computer_control"][1]()
+        assert receipt["task_id"] == key and "memory_bytes" not in json.dumps(receipt)
+        row = await wait_state(a, key, {"completed", "blocked", "unknown"})
+        assert row["state"] == "completed", a.store.details(key)
+        assert row["goal"] == "查询当前内存容量"
+        actual = a.store.result(key, "memory-query")
+        assert actual["isError"] is False and "memory_bytes" in json.dumps(actual)
+        assert len(a.provider.requests) == 2
+    finally:
+        await a.close()
+
+
+async def test_full_completion_errors_return_real_ids_and_allow_correction(tmp_path):
+    from myatri.companion.computer_full import FullComputerTools
+    a = agent(tmp_path, profile='full')
+    a.desktop_lock.acquire()
+    s = source()
+    key = task_key(s)
+    try:
+        a.submit(s, key)
+        a.store.next()
+        a.store.claim_call(key, 'actual-native-id', 'pwsh', {})
+        a.store.receipt(key, 'actual-native-id', {'isError': False, 'value': {'exitCode': 0},
+                                                'content': [{'type': 'text', 'text': 'memory_bytes: 123'}]})
+        tools = FullComputerTools({'workspace': tmp_path}, a.store, key)
+        for n, checks in enumerate(([{'kind': 'receipt_success', 'call_id': 'pwsh-1'}], [])):
+            result = a._tool(key, {'name': 'finish_task', 'call_id': f'bad-{n}',
+                'args': {'status': 'completed', 'summary': '查询结束', 'checks': checks}}, tools, n + 1)
+            assert result['error'] == 'completion_verification_failed'
+            assert result['available_receipt_ids'] == ['actual-native-id']
+            assert result['end_turn'] is False and a.store.get(key)['state'] == 'running'
+        result = a._tool(key, {'name': 'finish_task', 'call_id': 'corrected',
+            'args': {'status': 'completed', 'summary': '查询已验证', 'checks': [
+                {'kind': 'receipt_contains', 'call_id': 'actual-native-id', 'text': 'memory_bytes'}]}}, tools, 4)
+        assert result['state'] == 'completed' and a.store.get(key)['state'] == 'completed'
+    finally:
+        a.desktop_lock.release()
+        await a.close()
+
+
+async def test_full_unverified_completion_stops_after_three_corrections(tmp_path):
+    from myatri.companion.computer_full import FullComputerTools
+    a = agent(tmp_path, profile='full')
+    a.desktop_lock.acquire()
+    key = task_key(source())
+    try:
+        a.submit(source(), key)
+        a.store.next()
+        tools = FullComputerTools({'workspace': tmp_path}, a.store, key)
+        for n in range(3):
+            result = a._tool(key, {'name': 'finish_task', 'call_id': f'empty-{n}',
+                'args': {'status': 'completed', 'summary': 'model claim', 'checks': []}}, tools, n + 1)
+        assert result['state'] == 'blocked' and result['end_turn'] is True
+        assert '校验' in a.store.get(key)['summary'] and '不代表用户缺少授权' in a.store.get(key)['summary']
+    finally:
+        a.desktop_lock.release()
+        await a.close()
+
+
+@pytest.mark.skipif(not NODE.exists(), reason='isolated Harness not installed')
+async def test_real_harness_fixes_completion_reference_without_repeating_shell(tmp_path):
+    a = agent(tmp_path, [
+        tool_response('pwsh', {'description': 'Read memory',
+            'command': '[pscustomobject]@{memory_bytes=(Get-CimInstance Win32_ComputerSystem).TotalPhysicalMemory} | ConvertTo-Json -Compress'}, 'real-memory-id'),
+        tool_response('finish_task', {'status': 'completed', 'summary': '查询结束',
+            'checks': [{'kind': 'receipt_success', 'call_id': 'pwsh-1'}]}, 'wrong-id'),
+        tool_response('finish_task', {'status': 'completed', 'summary': '查询结束', 'checks': []}, 'empty-check'),
+        tool_response('finish_task', {'status': 'completed', 'summary': '已验证内存查询',
+            'checks': [{'kind': 'receipt_contains', 'call_id': 'real-memory-id', 'text': 'memory_bytes'}]}, 'right-id'),
+    ], profile='full')
+    key = task_key(source())
+    try:
+        a.submit(source(), key)
+        assert (await wait_state(a, key, {'completed', 'blocked', 'unknown'}))['state'] == 'completed', a.store.details(key)
+        receipts = a.store.details(key)['receipts']
+        assert len(receipts) == 4 and a.store.receipt_ids(key) == ['real-memory-id']
+        response = json.loads(a.provider.requests[2].messages[-1]['content'])
+        assert response['host_receipt_id'] == 'wrong-id'
+        assert 'real-memory-id' in response['result']
+    finally:
+        await a.close()
+
+
+@pytest.mark.skipif(not NODE.exists(), reason='isolated Harness not installed')
+async def test_plain_report_gets_one_finish_only_closure_without_repeating_action(tmp_path):
+    a = agent(tmp_path, [
+        tool_response('pwsh', {'description': 'Query fixture data', 'command': 'Write-Output memory_marker'}, 'native-query'),
+        {'content': '查询结果为memory_marker。'},
+        tool_response('finish_task', {'status': 'completed', 'summary': '查询结果为memory_marker。',
+            'checks': [{'kind': 'receipt_contains', 'call_id': 'native-query', 'text': 'memory_marker'}]}, 'closure'),
+    ], profile='full')
+    key = task_key(source())
+    try:
+        a.submit(source(), key)
+        assert (await wait_state(a, key, {'completed', 'blocked', 'unknown'}))['state'] == 'completed', a.store.details(key)
+        assert len(a.provider.requests) == 3
+        assert [t['function']['name'] for t in a.provider.requests[-1].tools] == ['finish_task']
+        assert a.store.receipt_ids(key) == ['native-query']
+    finally:
+        await a.close()
+
+
+@pytest.mark.skipif(not NODE.exists(), reason='isolated Harness not installed')
+async def test_missing_finish_still_preserves_report_and_stops_after_one_closure(tmp_path):
+    a = agent(tmp_path, [{'content': '结果报告：未验证信息'}, {'content': '仍未提交校验的最终报告'}], profile='full')
+    key = task_key(source())
+    try:
+        a.submit(source(), key)
+        row = await wait_state(a, key, {'completed', 'blocked', 'unknown'})
+        assert row['state'] == 'blocked' and len(a.provider.requests) == 2
+        assert '最终报告' in row['summary'] and '未验证' in row['summary']
+    finally:
+        await a.close()
+
+
+def test_legacy_stopped_task_projects_original_report_without_rewriting_history(tmp_path):
+    store = TaskStore(tmp_path / 'tasks.sqlite3')
+    task = 'a' * 64
+    store.create(task, 'owner', 'scope', 'query', {}, 'hash')
+    generic = '执行回合已停止；以工具回执及独立检查为准。'
+    store.state(task, 'blocked', generic)
+    store.event(task, {'type': 'assistant/message', 'seq': 0, 'data': {'message': {
+        'content': [{'type': 'text', 'text': '原报告：可用8.90GB'}]}}})
+    assert '8.90GB' in store.details(task)['summary']
+    assert '尚未完成校验' in store.feedback('owner', 'scope')[0]['summary']
+    assert store.get(task)['summary'] == generic and store.get(task)['state'] == 'blocked'
+
+
+@pytest.mark.skipif(not NODE.exists(), reason="isolated Harness runtime not installed")
 async def test_real_harness_file_roundtrip_and_shared_budget(tmp_path):
     a = agent(
         tmp_path,

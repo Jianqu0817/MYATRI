@@ -1,5 +1,11 @@
 # MYATRI STATUS
 
+## HARNESS-RESULT-CONTINUATION-PORT（2026-10-22）
+
+用户要求同步两个GitHub并移植可移植改进。来自AstrBot19a320d，迁入电脑自然语言接单、主对话instructions、真实回执ID/完成纠正/有界收尾、任务摘要反馈、同轮工具结果回传及消息换行分段。新增computer_reporting.py，只续接原工具协议；CliRuntime终端轮询报告、one-shot等待结果、启动保留待续接检查点。核心适配按_application_location定位原档案，不覆盖CLI账本/PrivateRecall/atri-local身份/0.3.0人类证据门控。监视blocked文案改实际受阻，HTTP任务详情含chat_report。
+
+110项定向通过63.50秒，含真实Harness离线fixture与原CLI结果回传/重启/终端确认；相关Ruff/diff和wheel构建通过。未重跑全量，无付费模型/真实消息/生产重启/群档案复制。旧来源清单不改，新清单harness_feedback_port_source.json记录Git blob哈希；不迁微信启动、attention或群库模式切换。正常退出旧CLI并重启入口生效。详见 [移植说明](../Harness结果回传移植_2026-10-22.md)。
+
 ## FULL-HARNESS-PORT（2026-10-22）
 
 本轮用户先要求取消便签/应用白名单、充分使用Harness命令行工具，后明确授权移植可移植改动到原核心并上传两个GitHub。full采用当前Windows账户权限，没有命令/路径/应用白名单；保留稳定owner绑定、持久claim/回执、共享预算及停止能力。官方PowerShell、读写编辑、glob/grep、jobs、cwd、todo、skill、MCP已接入；绝对路径编辑、真实Shell、后台输出、取消停止及离线MCP调用均有实测。模型均为fixture，没有手工付费验收或真实群测试发送。

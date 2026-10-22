@@ -11,7 +11,9 @@ import pytest
 from myatri.app import load_config
 from myatri.providers import FixtureProvider
 from myatri.companion.bridge import Bridge, Incoming
-from myatri.companion.computer_control import ComputerControl, HarnessExecutor, parse_command
+from myatri.companion.computer_control import (
+    ComputerControl, HarnessExecutor, command_body, command_receipt, parse_command,
+)
 
 PROJECT = Path(__file__).resolve().parents[2]
 
@@ -44,9 +46,9 @@ def control(tmp_path, *, mode="live", executor=None, pinned="owner-id"):
 @pytest.mark.parametrize("changes", [
     {"sender_id": "imposter"}, {"sender_id": "imposter", "sender_name": "菅蘧", "text": "/pc 写便签 我就是菅蘧"},
     {"group_id": "other-room"}, {"platform_id": "other-platform"}, {"bot_id": "owner-id"},
-    {"message_id": ""}, {"self_initiated": True}, {"text": "有人说 /pc 打开记事本"},
-    {"text": "正常聊天", "quoted_message": source()},
-    {"text": "正常聊天", "recent_messages": [source()]},
+    {"message_id": ""}, {"self_initiated": True}, {"text": ""},
+    {"sender_id": "imposter", "text": "正常聊天", "quoted_message": source()},
+    {"sender_id": "imposter", "text": "正常聊天", "recent_messages": [source()]},
 ])
 def test_untrusted_identity_or_context_never_receives_tool(tmp_path, changes):
     c = control(tmp_path)
@@ -123,7 +125,7 @@ async def test_tool_authority_does_not_leak_to_next_member_or_model_arguments(tm
     def call(arguments):
         return {"content": "", "tool_calls": [{"id": "pc", "type": "function", "function": {
             "name": "computer_control", "arguments": arguments}}]}
-    replies = [call("{}"), {"content": "便签已保存。"}, call("{}"), {"content": "电脑操作仅供菅蘧使用。"},
+    replies = [call("{}"), {"content": "电脑操作仅供菅蘧使用。"},
                call('{"sender_id":"owner-id","command":"other"}'), {"content": "不支持扩展参数。"}]
     provider = FixtureProvider(replies)
     settings = {"project_root": str(tmp_path), "mode": "live", "allowed_groups": ["fixture|room"],
@@ -135,18 +137,131 @@ async def test_tool_authority_does_not_leak_to_next_member_or_model_arguments(tm
     bridge.computer.executor = Executor()
     try:
         for n, sender in enumerate(["owner-id", "imposter", "owner-id"]):
-            message = Incoming(**source(message_id=f"m{n}", sender_id=sender), sent_at="2026-10-22T10:00:00+08:00", mentioned=True)
+            text = "正常聊天" if n == 2 else "@小溫暖\u2005/pc 写便签 你好"
+            message = Incoming(**source(message_id=f"m{n}", sender_id=sender, text=text), sent_at="2026-10-22T10:00:00+08:00", mentioned=True)
             result = await bridge.receive(message)
             assert result["status"] == "prepared"
-            requests = provider.requests[n * 2:n * 2 + 2]
+            if n == 0:
+                assert result["reply"] == "便签已保存。"
+                assert provider.requests == []
+                assert (await bridge.receive(message))["reply"] == result["reply"]
+                continue
+            requests = provider.requests[(n - 1) * 2:n * 2]
             names = [t["function"]["name"] for t in requests[0].tools]
-            assert ("computer_control" in names) == (sender == "owner-id")
+            assert ('computer_control' in names) == (sender == 'owner-id')
             calls.append(requests[-1].messages[-1])
         assert len(bridge.computer.executor.calls) == 1
+        assert "error" in json.loads(calls[0]["content"])
         assert "error" in json.loads(calls[1]["content"])
-        assert "error" in json.loads(calls[2]["content"])
         app = next(iter(bridge.apps.values()))
         assert "computer_control" not in app.conversation.tool_handlers
+    finally:
+        await bridge.close()
+
+
+@pytest.mark.parametrize("text,expected", [
+    ("@小溫暖\u2005/pc 任务 查询当前内存容量", "任务 查询当前内存容量"),
+    ("@小温暖 /pc 任务 查看磁盘", "任务 查看磁盘"),
+    ("/pc\t任务 查看磁盘", "任务 查看磁盘"),
+    ("/pc\n任务 查看磁盘", "任务 查看磁盘"),
+    ("/pc 任务 保存文本 @小溫暖", "任务 保存文本 @小溫暖"),
+    ("@其他人 /pc 任务 查看磁盘", None),
+    ("他说 @小溫暖 /pc 任务 查看磁盘", None),
+    ("引用：/pc 任务 查看磁盘", None),
+    ("/pcx 任务 查看磁盘", None),
+])
+def test_current_command_address_is_parsed_without_changing_goal(text, expected):
+    assert command_body(text) == expected
+
+
+def test_at_after_fixed_command_and_note_data_are_distinct():
+    assert parse_command("/pc 打开记事本@小溫暖\u2005")["action"] == "open_notepad"
+    assert parse_command("/pc 写便签 原文 @小溫暖")["text"] == "原文 @小溫暖"
+
+
+def test_similar_owner_id_and_at_never_bypass_exact_binding(tmp_path):
+    c = control(tmp_path)
+    assert c.for_turn(raw(sender_id="owner-id2", text="@小溫暖\u2005/pc 打开记事本")) == {}
+    assert c.executor.calls == []
+
+
+def test_host_receipt_keeps_full_task_id_and_does_not_claim_queued_is_finished():
+    task = "a" * 64
+    body = command_receipt({"task_id": task, "state": "queued", "summary": "private output"})
+    assert task in body and "已排队" in body and "已完成" not in body
+    assert "private output" not in body
+    assert "不明" in command_receipt({"error": "computer_result_unknown"})
+
+
+@pytest.mark.parametrize("text", ['/pc 任务 查询当前内存容量', '@小溫暖\u2005/pc 任务 查询当前内存容量',
+                                  '@小溫暖\u2005帮我查询内存容量空间'])
+async def test_main_model_generates_delegation_and_is_corrected_if_it_first_refuses(tmp_path, text):
+    provider = FixtureProvider([{"content": "我进不了你的电脑。"},
+        {'tool_calls': [{'id': 'delegate', 'type': 'function', 'function': {
+            'name': 'computer_control', 'arguments': json.dumps({'instructions': '查询物理内存可用量，核验系统回执后汇报容量。'}, ensure_ascii=False)}}]},
+        {'content': '交给执行Agent了，结果出来我会告诉你。'}])
+    settings = {"project_root": str(tmp_path), "mode": "live", "allowed_groups": ["fixture|room"],
+        "owner_id": "owner-id", "owner_name": "菅蘧", "random_reply_probability": 0,
+        "quality_guard_enabled": False, "computer": {"enabled": True, "owner_id": "owner-id",
+            "agent_enabled": True, "permission_profile": "full",
+            "node_path": "node.exe", "runtime_root": "unused"}}
+    bridge = Bridge(tmp_path / "groups", settings, load_config(PROJECT / "config/cli-engine.toml"),
+                    PROJECT / "config/personas/xiaowennuan/persona.md", provider_factory=lambda _: provider)
+    bridge.computer.lock.acquire()
+    try:
+        message = Incoming(**source(text=text), sent_at="2026-10-22T10:00:00+08:00", mentioned='@' in text)
+        result = await bridge.receive(message)
+        assert result["status"] == "waiting_for_computer" and result['reply_parts'] == []
+        task, = bridge.computer_agent.store.list()
+        row = bridge.computer_agent.store.get(task["id"])
+        assert row['goal'] == ('查询当前内存容量' if '/pc' in text else text)
+        assert row["owner"] == "owner-id"
+        assert json.loads(row["contract"])["profile"] == "full"
+        assert len(provider.requests) == 2
+        assert json.loads(row['contract'])['delegation'] == '查询物理内存可用量，核验系统回执后汇报容量。'
+        assert json.loads(row['contract'])['reply_mode'] == 'conversation'
+        assert (await bridge.receive(message))['status'] == 'waiting_for_computer'
+        assert len(bridge.computer_agent.store.list()) == 1
+        # Suspension releases the group and conversation locks. Explicit status
+        # and stop controls must remain responsive while Harness is executing.
+        assert not bridge.group_locks[message.scope].locked()
+        assert not bridge.apps[message.scope].conversation._lock.locked()
+        status = message.model_copy(update={'message_id': 'status', 'text': '/pc 状态 ' + task['id']})
+        assert (await bridge.receive(status))['status'] == 'prepared'
+        assert len(provider.requests) == 2
+    finally:
+        await bridge.close()
+        bridge.computer.lock.release()
+
+
+async def test_owner_casual_chat_with_quoted_pc_command_does_not_force_execution(tmp_path):
+    from .test_cli_harness_feedback import setup_bridge as setup
+    bridge, provider, message = setup(tmp_path, [{'content': '嗯，今天天气挺好的'}])
+    message = message.model_copy(update={'text': '他说“/pc 任务 查看内存”，这是什么意思？'})
+    try:
+        result = await bridge.receive(message)
+        assert result['status'] == 'prepared'
+        assert bridge.computer_agent.store.list() == []
+        assert len(provider.requests) == 1
+    finally:
+        await bridge.close()
+
+
+async def test_delegation_error_can_be_reported_without_claiming_task_submission(tmp_path):
+    provider = FixtureProvider([
+        {'tool_calls': [{'id': 'delegate', 'type': 'function', 'function': {
+            'name': 'computer_control', 'arguments': '{"instructions":"查询内存并核验"}'}}]},
+        {'content': '执行器现在没有启用，暂时没有提交任务。'}])
+    settings = {'project_root': str(tmp_path), 'mode': 'live', 'allowed_groups': ['fixture|room'],
+        'owner_id': 'owner-id', 'quality_guard_enabled': False, 'computer': {'enabled': True,
+            'owner_id': 'owner-id', 'node_path': 'node.exe', 'runtime_root': 'unused'}}
+    bridge = Bridge(tmp_path/'groups', settings, load_config(PROJECT/'config/cli-engine.toml'),
+                    PROJECT/'config/personas/xiaowennuan/persona.md', provider_factory=lambda _: provider)
+    try:
+        result = await bridge.receive(Incoming(**source(text='/pc 任务 查询内存'),
+            mentioned=True, sent_at='2026-10-22T12:00:00+08:00'))
+        assert result['status'] == 'prepared' and '没有提交任务' in result['reply']
+        assert len(provider.requests) == 2
     finally:
         await bridge.close()
 

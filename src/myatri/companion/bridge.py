@@ -216,6 +216,12 @@ class Bridge:
                 scope TEXT NOT NULL,candidate_id TEXT NOT NULL,delivery_id TEXT NOT NULL,
                 PRIMARY KEY(scope,candidate_id))""")
             self.routes = {row[0]: json.loads(row[1]) for row in db.execute("SELECT * FROM group_routes")}
+        from .computer_reporting import ComputerReports
+        self.computer_reports = ComputerReports(self)
+        self.computer.before_submit = lambda source, task_id: self.computer_reports.wait(
+            Incoming.model_validate({'mentioned': False,
+                **{k: v for k, v in source.items() if k in Incoming.model_fields}}), task_id)
+        self.computer_report_task = None
 
     def _cache_message(self, db, scope, key, fingerprint, payload):
         db.execute("INSERT OR IGNORE INTO recent_messages VALUES (?,?,?,?)",
@@ -282,6 +288,7 @@ class Bridge:
             context.protocol_store = app.queue
             context.group_scope, context.delivery_path = message.scope, self.path
             context.identities, context.short_memory = self.identities, self.short_memory
+            context.computer_tasks = self.computer_agent.store
             context.topics = self.topics
             context.cold_archive = self.cold_archive
             context.dialogue_turns = self.config.get("dialogue_turns", 80)
@@ -408,8 +415,8 @@ class Bridge:
                 "AND status IN ('prepared','sending','sent','unknown') "
                 "AND COALESCE(received_at,updated)>=?", (scope, day_start)).fetchone()[0]
             pending = db.execute(
-                "SELECT 1 FROM deliveries WHERE scope=? AND trigger_kind='explicit' "
-                "AND status IN ('received','prepared')", (scope,)).fetchone()
+                "SELECT 1 FROM deliveries WHERE scope=? AND trigger_kind IN ('explicit','computer_report') "
+                "AND status IN ('received','prepared','waiting_for_computer')", (scope,)).fetchone()
         group_last = None
         recent = self.short_memory.recent(scope, limit=1)
         if recent:
@@ -643,7 +650,7 @@ class Bridge:
                 app.conversation.context.budget.anchor = None
                 app.queue.set_meta("context_token_anchor", None)
                 with closing(sqlite3.connect(self.path)) as db, db:
-                    db.execute("UPDATE deliveries SET status='superseded' WHERE scope=? AND status IN ('received','prepared')", (scope,))
+                    db.execute("UPDATE deliveries SET status='superseded' WHERE scope=? AND status IN ('received','prepared','waiting_for_computer')", (scope,))
                 return {"ok": True, "action": "reload", "scope": scope, "persona_ref": current.ref,
                         "persona_changed": changed, "prompts_reloaded": True}
 
@@ -662,11 +669,13 @@ class Bridge:
                 app.queue.set_meta("group_context_boundary", boundary)
                 with closing(sqlite3.connect(self.path)) as db, db:
                     db.execute("DELETE FROM recent_messages WHERE scope=?", (scope,))
-                    db.execute("UPDATE deliveries SET status='superseded' WHERE scope=? AND status IN ('received','prepared')", (scope,))
+                    db.execute("UPDATE deliveries SET status='superseded' WHERE scope=? AND status IN ('received','prepared','waiting_for_computer')", (scope,))
                 return {"ok": True, "action": "clear-context", "scope": scope, "context_reset": result}
 
     def start(self):
         self.computer_agent.start()
+        if self.computer_agent.enabled and self.computer_report_task is None:
+            self.computer_report_task = asyncio.create_task(self.computer_reports.loop())
         if self.summary_task is None:
             self.summary_task = asyncio.create_task(self._summary_loop())
         for scope in self.routes:
@@ -875,7 +884,12 @@ class Bridge:
                 metadata = {"channel_source": source,
                             "logical_source_key": digest([message.scope, message.message_id]),
                             "evidence_not_independent_of_same_message_id": True}
-            answer = await app.conversation.respond(envelope, message_id=message.key, metadata=metadata)
+            from .computer_control import ComputerTaskPending
+            try:
+                answer = await app.conversation.respond(envelope, message_id=message.key, metadata=metadata)
+            except ComputerTaskPending as pending:
+                self.computer_reports.wait(message, pending.task_id)
+                return {'id': message.key, 'status': 'waiting_for_computer', 'reply_parts': []}
             protocol = app.queue.get_protocol(message.key)
             if protocol and protocol.get("status") == "completed" and "latency" in protocol:
                 protocol["latency"].update(
@@ -891,6 +905,8 @@ class Bridge:
                     (answer.body_markdown, answer.ref, time.time(),
                      json.dumps(answer.payload.get("reply_parts", [answer.body_markdown]), ensure_ascii=False), message.key),
                 )
+                db.execute("UPDATE computer_reports SET state='prepared' WHERE delivery_id=? AND state IN ('waiting','generating')",
+                           (message.key,))
                 return self._delivery_result(db, message.key)
 
     @staticmethod
@@ -915,6 +931,10 @@ class Bridge:
             with closing(sqlite3.connect(self.path)) as db, db:
                 if self._superseded(db, key):
                     return {"claimed": False}
+                report = db.execute('SELECT envelope,trigger_kind FROM deliveries WHERE id=?', (key,)).fetchone()
+                if report and report[1] == 'computer_report':
+                    if not self.computer.authorized(json.loads(report[0])):
+                        return {'claimed': False}
                 if key.startswith("pro_") and self._proactive_stale(db, key):
                     return {"claimed": False}
                 changed = db.execute(
@@ -1003,6 +1023,9 @@ class Bridge:
             return {"status": next_status, **({"sent_parts": end} if part_index is not None else {})}
 
     async def close(self):
+        if self.computer_report_task:
+            self.computer_report_task.cancel()
+            await asyncio.gather(self.computer_report_task, return_exceptions=True)
         await self.computer_agent.close()
         for scheduled, task in list(self.proactive_schedulers.values()):
             scheduled.stop()

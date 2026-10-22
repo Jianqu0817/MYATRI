@@ -1,5 +1,11 @@
 # MYATRI HANDOFF
 
+## HARNESS-RESULT-CONTINUATION-PORT（2026-10-22）
+
+先读 [结果回传移植](../Harness结果回传移植_2026-10-22.md)。本轮由用户授权从AstrBot19a320d迁入computer_control/agent/tasks/full、reading_conversation、bubbles及executor_full提示，适配bridge/context/server/cli_runtime/monitor。computer_reporting只恢复同一轮，不发独立模型报告。before_submit先登记等待，原tool_call_id+instructions持久化后提交；恢复复用已有task_id，unknown不重做。固定操作/控制仍宿主直达，通用任务由主模型生成instructions。
+
+必须保留CliRuntime._application_location/原库PrivateRecall/provider账本及内部atri/local，不能用桥版root/scope找核心检查点。bootstrap遇active computer_wait跳过清空式reload，任务结束才继续原轮；poll_proactive也显示computer_report，--message会等待回传。不要恢复“先发接单再开独立报告对话”旧行为。源码与测试110项定向通过63.50秒，Ruff/diff/wheel通过，不重跑全量。未重启/付费/发消息或导入群库，本机正常重启CLI加载；移植来源单独增量清单，不改旧基线。两GitHub同步由本轮明确授权，精确SHA见Git历史。
+
 ## FULL-HARNESS-PORT（2026-10-22）
 
 用户在要求AstrBot通用Harness后，又明确要求可移植改动接回内核并推送两个GitHub；因此本轮核心修改有直接授权。先读 [最新说明](../Harness通用执行与双仓迁移_2026-10-22.md) 与docs/harness_port_source.json。原guide未丢弃，新增入口指向本轮实现。src/myatri/companion下迁入computer_*、harness、prompts、deepseek_web、runtime_controls、control_proxy、monitor_stats、memory_repair、maintenance、recovery，桥/HTTP/阅读/监视对应接线保持core专有适配。

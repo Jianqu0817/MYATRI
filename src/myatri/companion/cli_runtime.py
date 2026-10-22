@@ -91,7 +91,12 @@ class CliRuntime(Bridge):
             db.execute("INSERT OR REPLACE INTO group_routes VALUES (?,?)",
                        (self.session.scope, json.dumps(self.session.model_dump(), ensure_ascii=False)))
         self._application(self.session, start_workers=False)
-        await self.reload_runtime(self.session.scope)
+        with closing(sqlite3.connect(self.archive_root / 'runtime.sqlite3')) as db:
+            waiting = any(json.loads(row[0]).get('computer_wait') for row in db.execute(
+                "SELECT payload FROM protocols WHERE agent=? AND user=? AND json_extract(payload,'$.status')='active'",
+                (self.archive_agent, self.archive_user)))
+        if not waiting:
+            await self.reload_runtime(self.session.scope)
         self._application(self.session)
         self.start()
 
@@ -121,11 +126,22 @@ class CliRuntime(Bridge):
                 raise
         return result
 
+    async def wait_for_delivery(self, result):
+        """One-shot terminal requests also wait for their original tool report."""
+        while result.get('status') == 'waiting_for_computer':
+            await asyncio.sleep(.25)
+            with closing(sqlite3.connect(self.path)) as db:
+                result = self._delivery_result(db, result['id'])
+                report = db.execute('SELECT state FROM computer_reports WHERE delivery_id=?', (result['id'],)).fetchone()
+            if report and report[0] == 'failed':
+                raise RuntimeError('电脑结果已保存，但主对话汇报失败；请在本机任务面板检查。')
+        return result
+
     async def poll_proactive(self):
         while True:
             with closing(sqlite3.connect(self.path)) as db:
                 keys = [r[0] for r in db.execute("SELECT id FROM deliveries WHERE scope=? AND status='prepared' "
-                    "AND trigger_kind='proactive' ORDER BY rowid", (self.session.scope,))]
+                    "AND trigger_kind IN ('proactive','computer_report') ORDER BY rowid", (self.session.scope,))]
                 pending = [self._delivery_result(db, key) for key in keys]
             for result in pending:
                 await self.display_delivery(result)
@@ -217,6 +233,7 @@ async def _run_cli(args, config, settings=None, *, provider_factory=None):
             runners = await start_ui(runtime, project, settings, token_path.read_text().strip())
         if getattr(args, "message", None) is not None:
             result = await runtime.receive_text(args.message, message_id=getattr(args, "message_id", None))
+            result = await runtime.wait_for_delivery(result)
             await runtime.display_delivery(result)
             return result
         proactive = asyncio.create_task(runtime.poll_proactive())

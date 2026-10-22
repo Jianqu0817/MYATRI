@@ -12,7 +12,9 @@ check = FULL_FINISH["parameters"]["properties"]["checks"]["items"]["properties"]
 check["kind"]["enum"] += ["receipt_success", "receipt_contains"]
 check["call_id"] = {"type": "string", "maxLength": 500}
 FULL_FINISH["description"] = (
-    "结束通用电脑任务；用真实工具回执或文件检查验证结果。receipt_success/receipt_contains指定call_id。"
+    "结束通用电脑任务；completed的checks不得为空。用真实工具回执或文件检查验证结果。"
+    "receipt_success/receipt_contains的call_id必须逐字复制工具结果旁的host_receipt_id，不能自造pwsh-1。"
+    "校验失败按返回的available_receipt_ids修正引用，不要重复已成功的操作。"
 )
 
 
@@ -54,10 +56,12 @@ class FullComputerTools(ComputerTools):
                     and value["job"].get("status") != "completed"
                 ):
                     passed = False
-                if isinstance(value.get('job'),dict):
-                    exit_code=re.search(r'exit code:\s*(-?\d+)',value['job'].get('detail',''))
-                    if exit_code and int(exit_code[1])!=0:
-                        passed=False
+                if isinstance(value.get("job"), dict):
+                    exit_code = re.search(
+                        r"exit code:\s*(-?\d+)", value["job"].get("detail", "")
+                    )
+                    if exit_code and int(exit_code[1]) != 0:
+                        passed = False
             if check["kind"] == "receipt_contains":
                 expected = check.get("text")
                 if not isinstance(expected, str) or not expected:

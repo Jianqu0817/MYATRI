@@ -1,0 +1,92 @@
+{
+  "date": "2026-10-22",
+  "source_commit": "19a320d2d6f15b85c1f16fbfeedbe44410963e97",
+  "core_base": "b03cb195745accbd00d20f10ce2d69694c823245",
+  "hash_basis": "Git blob bytes",
+  "excluded": [
+    "WeChat adapters and launchers",
+    "AstrBot attention",
+    "AstrBot local/group mode switch",
+    "runtime archives and credentials",
+    "role card changes"
+  ],
+  "files": [
+    {
+      "source": "src/myatri_bridge/computer_agent.py",
+      "target": "src/myatri/companion/computer_agent.py",
+      "source_sha256": "efdcf5abd93c5dff4184bbb7768f2bc0904cc92d03bc54ed5a22e83f449ef6a0",
+      "target_sha256": "efdcf5abd93c5dff4184bbb7768f2bc0904cc92d03bc54ed5a22e83f449ef6a0"
+    },
+    {
+      "source": "src/myatri_bridge/computer_tasks.py",
+      "target": "src/myatri/companion/computer_tasks.py",
+      "source_sha256": "4a34e51660b7dd915061544facb0feb2b50b3d7a1a70970898eb589e707f96ef",
+      "target_sha256": "4a34e51660b7dd915061544facb0feb2b50b3d7a1a70970898eb589e707f96ef"
+    },
+    {
+      "source": "src/myatri_bridge/computer_full.py",
+      "target": "src/myatri/companion/computer_full.py",
+      "source_sha256": "f3e1da98fba5341a575471e886a16b8fd14fd5bc1330977cdc5930b984915e4a",
+      "target_sha256": "f3e1da98fba5341a575471e886a16b8fd14fd5bc1330977cdc5930b984915e4a"
+    },
+    {
+      "source": "src/myatri_bridge/computer_control.py",
+      "target": "src/myatri/companion/computer_control.py",
+      "source_sha256": "0832af8111cf37eba456c822dabbf17919ba87e029e60fa386e3ea67b5c7ae2d",
+      "target_sha256": "d6d2d508464c4715425e75022591e7cd32c2093191b3be2e041c8df0bd4afe1e"
+    },
+    {
+      "source": "src/myatri_bridge/reading_conversation.py",
+      "target": "src/myatri/companion/reading_conversation.py",
+      "source_sha256": "66077eb08faec9ace4bc25c24b91c441e24c49b5749913dbbdd0f12279f133c8",
+      "target_sha256": "0726854065c1da3b97e55902370dce7057631bc235a3cf0689a51b964493e0c2"
+    },
+    {
+      "source": "src/myatri_bridge/bubbles.py",
+      "target": "src/myatri/companion/bubbles.py",
+      "source_sha256": "e667395c5ab92d7d0fbc0cb6bbf2b5a3a9d535f37d55c4cb321618d94c979d36",
+      "target_sha256": "e667395c5ab92d7d0fbc0cb6bbf2b5a3a9d535f37d55c4cb321618d94c979d36"
+    },
+    {
+      "source": "src/myatri_bridge/computer_reporting.py",
+      "target": "src/myatri/companion/computer_reporting.py",
+      "source_sha256": "7345f17c7efe25456593c4359d60eac1ecb0cc0c959e9698d625e7e23b65adc8",
+      "target_sha256": "b41608c136a8f2cd14a2a7c0aa05697207f7c30e5a0a7673db3f90ab5eba6fd3"
+    },
+    {
+      "source": "src/myatri_bridge/prompts/executor_full.md",
+      "target": "src/myatri/companion/prompts/executor_full.md",
+      "source_sha256": "546526477697c1e54c1057598a8d2c693af92a7b6a011fd27235c9a9e64be439",
+      "target_sha256": "400cb889f1d57ae294625f06581fce3947cfcc5acd7dbaafbc8e46b134fb4aab"
+    },
+    {
+      "source": "src/myatri_bridge/bridge.py",
+      "target": "src/myatri/companion/bridge.py",
+      "source_sha256": "8cc7ed2b0cbd6166107cbd57cd2b26590d2afe4aa7be37547432cf92cf6fcc8c",
+      "target_sha256": "3d2f066ee466295fd9b1baa8aca8b4dc7c089523b2fb4dd3be0d092780f8c49d"
+    },
+    {
+      "source": "src/myatri_bridge/context.py",
+      "target": "src/myatri/companion/context.py",
+      "source_sha256": "a3b104aabe5332fdcf7e8aa5c935b2f94760bfad4c9c8af0f7ef279e2132b1ce",
+      "target_sha256": "35890d31c5d60a423947b7481455a7442faf521bea0af11522a6be5c79769048"
+    },
+    {
+      "source": "src/myatri_bridge/monitor.html",
+      "target": "src/myatri/companion/monitor.html",
+      "source_sha256": "09572f1063efdede2799eb0ca5e36e645053df6891e22c6fbcd1ee3ecf0a2ff5",
+      "target_sha256": "fc6947c3e831a566850c7a2fd0b3b8b29af20c3b98a5e99c3f1282a715f1ba42"
+    },
+    {
+      "source": "src/myatri_bridge/server.py",
+      "target": "src/myatri/companion/server.py",
+      "source_sha256": "ea3afe50663e4308995c72e5375a5438b12f84f24232ebd265c89529f1a357f1",
+      "target_sha256": "849fc6042c33dd095bdc52cc61f392edeb9ea2af5a29ddd63b5d20872af8ed93"
+    },
+    {
+      "target": "src/myatri/companion/cli_runtime.py",
+      "target_sha256": "695b831847d4c2c379346c85f6f62b628283f4362935fce4473165f97969c430",
+      "adaptation": "Core-specific original archive, provider budget and terminal delivery"
+    }
+  ]
+}

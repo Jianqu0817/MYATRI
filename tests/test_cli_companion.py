@@ -1,5 +1,6 @@
 """CLI migration keeps the old archive, adds real channel behavior, uses no paid API."""
 from argparse import Namespace
+import asyncio
 from copy import deepcopy
 import json
 from pathlib import Path
@@ -36,6 +37,96 @@ def runtime(tmp_path, *, replies=None):
                 "capture_requests": True, "quality_guard_enabled": False, "cold_retention_days": 30}
     return CliRuntime(project / "var/xiaowennuan", settings, configuration(), card,
                       provider_factory=lambda scope: provider), provider, project
+
+
+class ConversationFixture(FixtureProvider):
+    async def generate(self, request):
+        if request.purpose != 'conversation':
+            return await FixtureProvider().generate(request)
+        return await super().generate(request)
+
+
+async def test_cli_harness_report_returns_to_original_private_turn_and_terminal(tmp_path):
+    provider = ConversationFixture([
+        {'tool_calls': [{'id': 'main-delegate', 'type': 'function', 'function': {
+            'name': 'computer_control', 'arguments': '{"instructions":"只读查询内存容量并核验回执后返回结果"}'}}]},
+        {'content': '查到了，内存32GB\n查询已经核验'}])
+    settings = {'project_root': str(tmp_path), 'mode': 'live', 'owner_id': 'owner', 'owner_name': '菅蘧',
+        'quality_guard_enabled': False, 'computer': {'enabled': True, 'agent_enabled': True,
+        'owner_id': 'owner', 'permission_profile': 'full', 'node_path': 'node.exe', 'runtime_root': 'unused'}}
+    rt = CliRuntime(tmp_path / 'original-private', settings, configuration(),
+        PROJECT / 'config/personas/xiaowennuan/persona.md', provider_factory=lambda _: provider)
+    rt.computer.lock.acquire()
+    try:
+        await rt.bootstrap()
+        app = rt.apps[rt.session.scope]
+        assert app.store.agent_id == 'atri' and app.store.user_id == 'local'
+        assert app.root == rt.archive_root and app.gateway.budget_ledger is app.queue
+        accepted = await rt.receive_text('帮我查询内存容量', message_id='memory-query')
+        assert accepted['status'] == 'waiting_for_computer'
+        assert len(provider.requests) == 1
+        task, = rt.computer_agent.store.list()
+        rt.computer_agent.store.state(task['id'], 'completed', '只读查询内存32GB，已核验。')
+        await rt.computer_reports.tick()
+        final = await rt.wait_for_delivery(accepted)
+        assert final['id'] == accepted['id'] and final['status'] == 'prepared'
+        printed = []
+        await rt.display_delivery(final, emit=printed.append)
+        assert len(printed) == 2 and '32GB' in printed[0]
+        assert len(provider.requests) == 2 and all(r.purpose == 'conversation' for r in provider.requests)
+        tool = next(m for m in provider.requests[-1].messages if m['role'] == 'tool')
+        assert tool['tool_call_id'] == 'main-delegate' and '32GB' in tool['content']
+        assert app.store.verify_archive() == []
+    finally:
+        await rt.close()
+        rt.computer.lock.release()
+
+
+async def test_cli_restart_continues_saved_tool_protocol_in_original_archive(tmp_path):
+    provider = ConversationFixture([{'tool_calls': [{'id': 'delegate', 'type': 'function', 'function': {
+        'name': 'computer_control', 'arguments': '{"instructions":"查询内存并核验"}'}}]},
+        {'content': '结果是32GB'}])
+    settings = {'project_root': str(tmp_path), 'mode': 'live', 'owner_id': 'owner', 'owner_name': '菅蘧',
+        'quality_guard_enabled': False, 'computer': {'enabled': True, 'agent_enabled': True,
+        'owner_id': 'owner', 'permission_profile': 'full', 'node_path': 'node.exe', 'runtime_root': 'unused'}}
+    card = PROJECT / 'config/personas/xiaowennuan/persona.md'
+    rt = CliRuntime(tmp_path / 'private', settings, configuration(), card, provider_factory=lambda _: provider)
+    rt.computer.lock.acquire()
+    try:
+        await rt.bootstrap()
+        accepted = await rt.receive_text('帮我查询内存容量', message_id='before-restart')
+        assert accepted['status'] == 'waiting_for_computer'
+        task, = rt.computer_agent.store.list()
+        rt.computer_agent.store.state(task['id'], 'completed', '内存32GB，已核验')
+        key = accepted['id']
+    finally:
+        await rt.close()
+        rt.computer.lock.release()
+    restored = CliRuntime(tmp_path / 'private', settings, configuration(), card, provider_factory=lambda _: provider)
+    restored.computer.lock.acquire()
+    poll = None
+    try:
+        await restored.bootstrap()
+        assert restored.apps[restored.session.scope].queue.get_protocol(key)['status'] == 'active'
+        await restored.computer_reports.tick()
+        printed = []
+        original_display = restored.display_delivery
+        async def display(result):
+            return await original_display(result, emit=printed.append)
+        restored.display_delivery = display
+        poll = asyncio.create_task(restored.poll_proactive())
+        async with asyncio.timeout(5):
+            while not printed:
+                await asyncio.sleep(.02)
+        assert '32GB' in printed[0]
+        assert len(provider.requests) == 2 and len(restored.computer_agent.store.list()) == 1
+        assert not restored.config.get('proactive', {}).get('enabled', False)
+    finally:
+        if poll:
+            poll.cancel()
+            await asyncio.gather(poll, return_exceptions=True)
+        await restored.close()
+        restored.computer.lock.release()
 
 
 async def test_old_cli_memory_and_internal_identity_survive_with_new_role_card(tmp_path):

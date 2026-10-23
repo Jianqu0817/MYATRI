@@ -1,8 +1,8 @@
 # MYATRI HANDOFF
 
-## PRIMARY-REPO-SYNC（2026-10-24）
+## NO-AUTO-SYNC（2026-10-24）
 
-myatry 成为三仓主开发仓：其 `src/myatri/**` 核心与本仓 `src/myatri/**` 经 myatry `scripts/sync_repos.py` 保持字节一致（本轮已对齐 0.3.0 的 author_kind/is_human_message 改进）。**本仓核心文件不要直接修改**：改动会在下次同步被标记 NEEDS REVIEW 或覆盖；主开发在 myatry 进行。本仓 `myatri/companion/` 为 CLI 适配层，同步脚本只报告漂移不自动写入，移植仍按既有 port 清单流程。本仓运行数据与私有库不在同步范围。
+myatry 与本仓的自动字节同步（scripts/sync_repos.py）取消：单向同步与并行开发不兼容。**本仓保持完全自主的活跃维护**；需要借鉴 myatry 改动时按一次性手工移植并注明来源。2026-10-24 的 emotion.py 表达指引（fe68620）是最后一次自动同步写入。下方 PRIMARY-REPO-SYNC 条目为历史记录。
 
 ## README-DEPLOYMENT-GUIDE（2026-10-23）
 

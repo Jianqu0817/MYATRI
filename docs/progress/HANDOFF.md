@@ -1,5 +1,9 @@
 # MYATRI HANDOFF
 
+## PRIMARY-REPO-SYNC（2026-10-24）
+
+myatry 成为三仓主开发仓：其 `src/myatri/**` 核心与本仓 `src/myatri/**` 经 myatry `scripts/sync_repos.py` 保持字节一致（本轮已对齐 0.3.0 的 author_kind/is_human_message 改进）。**本仓核心文件不要直接修改**：改动会在下次同步被标记 NEEDS REVIEW 或覆盖；主开发在 myatry 进行。本仓 `myatri/companion/` 为 CLI 适配层，同步脚本只报告漂移不自动写入，移植仍按既有 port 清单流程。本仓运行数据与私有库不在同步范围。
+
 ## README-DEPLOYMENT-GUIDE（2026-10-23）
 
 按用户要求重写根 README 为当前部署/使用入口：依赖、首次安装、凭据、启动器与库边界、界面端口、搜索与 Harness 身份安装、报告回传、费用/恢复、排错和备份更新。AstrBot 明确微信发行组件不随 Git 提供，prepare 不负责冷安装，并记录匹配版本恢复与同库终端互斥；核心明确两启动器不同库及完整目录冷备份。历史文档保留其日期含义。仅改文档：两仓相对链接与代码围栏通过，命令帮助入口通过，配置/脚本核对与 diff 通过；核心在隔离 root/project、显式角色卡下完成单轮 offline 冒烟。未启动生产、调用付费模型或发送微信。

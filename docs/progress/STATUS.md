@@ -1,5 +1,9 @@
 # MYATRI STATUS
 
+## README-DEPLOYMENT-GUIDE（2026-10-23）
+
+按用户要求重写根 README 为当前部署/使用入口：依赖、首次安装、凭据、启动器与库边界、界面端口、搜索与 Harness 身份安装、报告回传、费用/恢复、排错和备份更新。AstrBot 明确微信发行组件不随 Git 提供，prepare 不负责冷安装，并记录匹配版本恢复与同库终端互斥；核心明确两启动器不同库及完整目录冷备份。历史文档保留其日期含义。仅改文档：两仓相对链接与代码围栏通过，命令帮助入口通过，配置/脚本核对与 diff 通过；核心在隔离 root/project、显式角色卡下完成单轮 offline 冒烟。未启动生产、调用付费模型或发送微信。
+
 ## HARNESS-RESULT-CONTINUATION-PORT（2026-10-22）
 
 用户要求同步两个GitHub并移植可移植改进。来自AstrBot19a320d，迁入电脑自然语言接单、主对话instructions、真实回执ID/完成纠正/有界收尾、任务摘要反馈、同轮工具结果回传及消息换行分段。新增computer_reporting.py，只续接原工具协议；CliRuntime终端轮询报告、one-shot等待结果、启动保留待续接检查点。核心适配按_application_location定位原档案，不覆盖CLI账本/PrivateRecall/atri-local身份/0.3.0人类证据门控。监视blocked文案改实际受阻，HTTP任务详情含chat_report。

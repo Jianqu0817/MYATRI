@@ -1,5 +1,9 @@
 # MYATRI HANDOFF
 
+## README-DEPLOYMENT-GUIDE（2026-10-23）
+
+按用户要求重写根 README 为当前部署/使用入口：依赖、首次安装、凭据、启动器与库边界、界面端口、搜索与 Harness 身份安装、报告回传、费用/恢复、排错和备份更新。AstrBot 明确微信发行组件不随 Git 提供，prepare 不负责冷安装，并记录匹配版本恢复与同库终端互斥；核心明确两启动器不同库及完整目录冷备份。历史文档保留其日期含义。仅改文档：两仓相对链接与代码围栏通过，命令帮助入口通过，配置/脚本核对与 diff 通过；核心在隔离 root/project、显式角色卡下完成单轮 offline 冒烟。未启动生产、调用付费模型或发送微信。
+
 ## HARNESS-RESULT-CONTINUATION-PORT（2026-10-22）
 
 先读 [结果回传移植](../Harness结果回传移植_2026-10-22.md)。本轮由用户授权从AstrBot19a320d迁入computer_control/agent/tasks/full、reading_conversation、bubbles及executor_full提示，适配bridge/context/server/cli_runtime/monitor。computer_reporting只恢复同一轮，不发独立模型报告。before_submit先登记等待，原tool_call_id+instructions持久化后提交；恢复复用已有task_id，unknown不重做。固定操作/控制仍宿主直达，通用任务由主模型生成instructions。

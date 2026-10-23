@@ -1,144 +1,364 @@
-# MYATRI
+# MYATRI · 本地持续记忆与角色运行时
 
-2026-10-22增量移植：Harness 实际结果回到小温暖原对话后再向终端回复，支持自然语言接单、真实回执校验纠正、重启续接与换行分段；保留原私聊记忆和额度账本。[移植说明](docs/Harness结果回传移植_2026-10-22.md)。
+MYATRI 是以本地档案为基础、使用 DeepSeek 生成回复的持续角色运行时。当前 **0.3.0** 提供完整命令行聊天：小温暖角色卡、近期上下文、来源可追溯的长期记忆、PAD 情绪、后台维护、联网搜索、Harness 电脑执行 Agent，以及本机监视窗口。
 
-2026-10-22：新增通用 Harness 执行 Agent（PowerShell、文件编辑/搜索、后台任务、技能与 MCP），沿用稳定账号授权和共享额度；可移植实现已接入原CLI。详见[通用执行器与双仓边界](docs/Harness通用执行与双仓迁移_2026-10-22.md)。
+**无需安装或连接微信、AstrBot。** 本指南面向 Windows 10/11 x64，核对日期 **2026-10-23**。聊天数据默认保存在本机；真实模型回复需要网络和付费 API，不是离线大模型。
 
-后续 Agent 接手与维护，请先阅读：[项目总览与 Agent 维护指南](docs/项目总览与Agent维护指南.md)。包含当前架构、数据边界、提示词位置、测试与发布流程。
+> **本机已经配置过？** 双击 `启动小温暖.cmd` 即可继续原记忆。换入口或删除 `var/` 会导致用到不同的库；升级时不需要重新初始化已有档案。
 
-## 当前版本：0.3.0（2026-10-22）
+## 目录
 
-MYATRI 现有完整 CLI 运行时，移入 AstrBot 项目的角色卡、丰富上下文、短期摘要与记忆核对、身份归属、分页读原文、语义分段、Harness 联网工具、主动发言调度和本机界面。旧 CLI 原始记忆与内部身份保留，不导入微信群运行档案。迁移清单和验证见 [CLI迁移说明](docs/CLI迁移_2026-10-22.md)。
+- [与 AstrBot 版的关系](#与-astrbot-版的关系)
+- [首次部署](#首次部署)
+- [日常使用](#日常使用)
+- [窗口与配置](#窗口与配置)
+- [联网搜索](#联网搜索)
+- [安装电脑执行 Agent](#安装电脑执行-agent)
+- [记忆情绪与自动维护](#记忆情绪与自动维护)
+- [Token预算与费用](#token预算与费用)
+- [可选本地嵌入模型](#可选本地嵌入模型)
+- [常见问题](#常见问题)
+- [更新备份与迁移](#更新备份与迁移)
+- [开发与维护](#开发与维护)
 
-双击 **启动小温暖.cmd** 即使用新版，沿用 `var/xiaowennuan`；`启动MYATRI.cmd` 继续使用 `var/myatri-main`。两入口都运行 `companion --mode live`，凭据仍从 Windows 凭据管理器读取。首次启动新版会把磁盘角色卡同步为原库的新人格版本，旧版本保留。
+## 与 AstrBot 版的关系
 
-- [监视](http://127.0.0.1:8777/)：上下文、Token 用量与运行状态。
-- [实际请求与控制](http://127.0.0.1:8778/)：查看发给模型的上下文，重载角色卡/系统提示词，清空工作上下文。
-- `/reload`、`/clear`、`/context`、`/memory 关键词`、`/retry-memory`、`/quit` 可在终端使用。清窗不删除长期记忆。
-- 50M 日额度、1M 单请求上限、650k 压缩阈值、200k 工作窗口；80组往返和100条近期消息是选材上限，不保证每轮填满。
-- 主动发言默认关闭。联网工具公开配置默认关闭，本机配置沿用现有 Harness 路径；搜索独立限40次/日，未改为50M共享硬约束。
-- CLI 控制端口8776、监视8777、查看器8778，独立于微信项目。正常双击会替换当前项目的旧 CLI 服务；检查模式不停止进程。原 `chat` 子命令保留兼容，不含全部新渠道能力。
+| 项目 | 用途 | 默认运行数据 |
+| --- | --- | --- |
+| 本仓库 MYATRI | 独立终端聊天与内核开发 | `var/xiaowennuan/` 或明确指定的 root |
+| [MYATRI-AstrBot](https://github.com/Jianqu0817/MYATRI-AstrBot) | 微信群聊，也能停止群聊后在终端延续原群库 | 另一个仓库的 `var/groups/` |
 
-以下为旧版本记录，其中端口和功能限制不代表0.3.0现状。
+同步的是可移植实现，不自动复制群记录、私人记忆、身份和本机配置。两个仓库的同名角色不意味着共用一份记忆。同一 Windows 用户可复用凭据管理器中的 DeepSeek Key，但各项目的预算账本也不会自动合并。
 
-## 0.2.8历史记录（2026-10-21）
+如果要“暂时关闭群聊、直接在终端接着同一群上下文聊”，请用 **AstrBot 仓库的 `Start-Local-Chat.cmd`**；本仓库独立启动不会自动读取那个群库。
 
-0.2.8修复失败维护阻塞、成员候选隔离与恢复，并与微信项目的摘要恢复和健康告警配套。详见[记忆链路修复](docs/记忆链路修复_0.2.8.md)。角色卡内容不变。
+## 首次部署
 
-本次汇总发布包含更丰富的上下文、当前话头优先的提示词、精简JSON、实际请求查看器、持久化清窗接口，以及桥接项目的分段发送与角色卡热重载支持。角色卡文件与运行库中的人格版本分开管理，修改文件不等于已经替换正在运行的人格。
+### 1. 安装前置工具
 
-- 私聊角色卡模板为2.0；桥接仓库的群聊模板为2.4，两份模板本次保留各自内容，没有强行同步覆盖。
-- 普通回复通常20—100字，本地兜底160字；单请求上下文预算1M、压缩阈值650k、每日50M。群桥工作窗口为200k。曾讨论的3倍额度扩展已取消，当前额度未扩大。
-- 微信推荐从桥接项目的Start-WeChat.cmd启动；Live入口会明确将模式保存为live，普通入口沿用当前模式，不代表强制离线。
-- 监视页8767显示用量；查看器8768显示实际请求，并可对运行中的微信群重载角色卡/提示词、清空工作上下文。私聊没有对应HTTP控制通道。
+- Windows 10/11 x64：完整双击启动、凭据管理器和电脑执行方案以此为部署目标。
+- Git：`git --version` 可用。
+- uv：`uv --version` 可用，用于安装 Python 和锁定依赖。
+- Python **3.12**：项目要求 `>=3.12,<3.13`，可由 uv 自动安装。
+- 真实聊天需 DeepSeek API Key、账户额度和可访问接口的网络。
+- Node、pnpm、微信、AstrBot 均**不是基础聊天必需组件**。
 
-文档：[本次核对与同步说明](docs/本次改动核对与GitHub同步_2026-10-21.md) · [丰富上下文](docs/上下文扩展与自然聊天_0.2.1.md) · [提示词来源](docs/QQ-agent参考与对话提示词改进_0.2.3.md) · [上下文查看器](docs/实际上下文查看器_0.2.2.md) · [JSON精简](docs/上下文JSON精简_0.2.6.md) · [分段发送](docs/微信语义分段发送_0.2.7.md) · [重载与清窗](docs/角色卡重载与清空上下文_0.2.7.md)。
-
-以下日期条目和早期验证报告保留历史含义；当前用法和验证以顶部说明及本次核对文档为准。
-
-2026-10-21 核心0.2.0：修复基础索引与增量检索，补充群聊来源捆绑、支持审查与宿主只读工具接口。详见[检索与群聊质量更新](docs/检索与群聊质量更新_0.2.0.md)。本次不修改角色卡，该阶段已发布，当前配置见上文。
-
-2026-10-21 角色卡2.0：完整收录菅蘧提供的原始反应素材和六段真实群聊对话；身份问答不再强制跳出角色，现实能力与记录仍按实际情况回答。私聊人格更新至persona@17，AstrBot当前群更新至persona@15，专属关系与群聊边界保留。
-
-2026-10-21 角色卡1.9：吸收菅蘧提供的生活化反应素材，补充汉堡王偏好、嘴快跑题、接梗失手、温和互损、意见分歧和记忆诚实规则；原有角色与边界保持。
-
-2026-10-21 角色卡1.8：在1.7群聊扮演结构上补入去AI腔的表达准则和三组“避免/可以”示例，维持小温暖原有说话风格与事实诚实。
-
-2026-10-21 角色卡1.7：在保留小温暖既有身份、生平、温柔知性、含蓄亲昵、口语风格和记忆边界的基础上，吸收群友提示词的消息对象判断、群聊节奏、情境切换与正反示例结构。AstrBot当前群保留专属关系设定和多人记忆边界。
-
-GitHub：[主项目](https://github.com/Jianqu0817/MYATRI) · [AstrBot桥接项目](https://github.com/Jianqu0817/MYATRI-AstrBot)。两个仓库均为私有，需登录有权限的GitHub账号访问。
-
-2026-10-21 角色卡优化（1.6）：角色卡与现有私聊人格更新至 `persona@10`。合并P03/P12重复描述，明确日常、亲昵与认真任务时的表达切换；保留自然口语、40—80字闲聊和适度反问，书卷气体现于见识与分寸。AstrBot同步同一优化并保留其P04相伴设定及群聊边界。此前的0.1.8调整说明如下。
-
-2026-10-21 最新运行调整（0.1.8）：两个项目同步使用口语表达约束；已按用户授权将135条原始消息及526个历史版本迁入桥接当前群，保留原库和已有群聊记录。重启聊天及机器人服务加载新代码，微信可保持登录。见[日常口语与记忆迁移](docs/日常口语与记忆迁移_0.1.8.md)。以下为历史版本记录。
-
-2026-10-21 AstrBot独立接入项目已建立于 `D:/DS_workspace/MYATRI-AstrBot`：群聊后端与插件离线联调通过，默认关闭真实连接。此前启动、记忆继承、角色、降频和排版改动集中记录于[项目修改记录与当前配置](docs/项目修改记录与当前配置_2026-10-21.md)。原私聊库本轮未改动；微信群连接层尚需选定并实测。
-
-2026-10-21 聊天调整（0.1.7）：小温暖角色卡1.2已同步到现有库persona@5。日常正文目标40—80字，80字本地上限，短回复不硬凑字、不增加API改写；减少反问、征求意见及邮件式总结。终端按“你／小温暖／系统”分块显示时间，正文不复述内部时间标签。旧对话、角色历史和继承边界保留；频率30/50、每日50M保持。输入 `/quit` 后重新双击启动小温暖.cmd加载代码。详见[聊天语气与终端排版](docs/聊天语气与终端排版_0.1.7.md)。
-
-2026-10-21 角色与配置更新（0.1.6）：小温暖角色卡1.1按用户补充调整为轻柔、灵动、文雅、含蓄俏皮的表达，保留独立人格和全部继承记忆，现有库为persona@4。完整诊断/投影约30轮、记忆/情绪/状态50轮、深度整理约150轮、人格审阅约300轮；日额度50M tokens，单次窗口1M和650k压缩阈值保持。重启小温暖入口加载。设定原文与使用说明见[角色配置](config/personas/xiaowennuan/README.md)，下方10/30/90/180为0.1.5历史基线。
-
-2026-10-21 运行优化（0.1.5）：普通聊天完整诊断每10轮、记忆/情绪/临时状态每30轮、反思/关联每90轮、人格审阅约180轮；原话仍即时落盘，650k压缩前补齐依赖。档案读取缓存、约10轮增量投影及5秒后台空闲轮询减少本地开销，每条消息向模型提供带时区的发送时间。小温暖完整角色卡与继承记忆保留。重启生效，具体频率、验证和限制见[运行开销优化](docs/运行开销优化_0.1.5.md)；下方20轮为历史版本说明。
-
-2026-10-21 调用节奏（0.1.4）：一键启动的live配置采用20轮批处理，原话仍即时保存；合并整理记忆、情绪、反思和临时状态，压缩前先等待这些依赖。上下文上限1M、自动压缩软阈值650k（API真实usage锚定，新增材料保守估计），不再按原16k字节预算频繁压缩；每轮状态激活改为本地选择。日额度仍为1M，与单次上下文窗口分开。重启生效；已有临时信息撤回、部分检索排序等缺口仍开放。详情见[调用节奏与压缩策略](docs/调用节奏与压缩策略.md)。
-
-2026-10-20情绪模块（0.1.3）：基于MIT emotional-memory局部源码开发PAD连续状态、缓慢心境、LLM事件评价、临时情绪余波与显式撤回；后台评价经现有网关/队列/统一提交，前台注入有界状态。默认offline仍可defer；可选心境候选排序默认关闭。开发方案、来源和验证见[情绪模块开发](情绪模块开发.md)。不自动修改人格或启用外发，不以数值证明真实情感。新live事件会增加有预算的后台评价请求；本轮未调用真实API。
-
-2026-10-20 源码复用：0.1.2 已局部改编 A-MEM 的关联邻居去重内核与 Letta Code 的原子快照写入内核，并接入生产路径。仅两处小型代码适配，未接入完整框架。192项完整离线回归与源码目录外wheel试运行通过；来源、许可、兼容验证与未移植理由见 [复用报告](reports/upstream_reuse_2026-10-20.md) 和 [逐段清单](LICENSES/upstream/manifest.json)。
-
-2026-10-20 持久运行修复：0.1.1 已修复重复压缩、索引快照/发布/历史证据、后台有界材料、调度/时间及共享预算，并接通日常表达/反馈归因。178项完整离线回归通过，详见[修复与边界](reports/persistence_fixes_2026-10-20.md)。本轮0次新API，长期语义及实体/技能设计仍待验证/实现。下文旧审查状态为历史记录，以本补记为准。
-
-当前设计修订（2026-10-20）：[工程规划0.3](docs/01_工程规划书.md)与[动态索引/技能记忆设计及检查表](docs/04_动态索引与技能记忆设计.md)已同步讨论。人物/项目/地点的稳定实体入口、技能学习入口仍待实现；现有能力为事件参与者检索、动态主题和可替换Embedding。默认TF-IDF，可选本地BGE；全文分块、局部增量索引与已知一致性缺陷仍开放。文档新增不代表生产功能已完成。
-
-2026-10-20新增：会话语义压缩和临时状态激活已接入LLM API；116项离线回归、2次官方合成smoke通过。正常live聊天及/compact生效，独立compact/context命令新增--mode live。失败/defer/离线明确降级。详见[本次升级与验证](reports/llm_context_upgrade.md)。其他审查项仍开放，下文80项为历史基线。
-
-V1 本地实现：持久文本经历、真实向量/Leiden记忆图、混合回忆、临时念头与反馈生命周期、局部人格更新、上下文压缩、持久任务与恢复。
-
-**普通回归最新116项通过，官方DeepSeek-V4.1-Flash生成/JSON/工具/thinking协议已有短smoke证据；完整V1验收因组件审查发现的缺陷仍开放。** 密钥保存在Windows凭据管理器，不在项目文件或发行包中。默认offline仍是明确标记的fixture演示；真实长期反思/人格语义效果尚未验证，联系人主动发送与部署未启用。
-
-**2026-10-20组件审查补记：此前80项通过是历史测试基线。新复现了索引发布倒退、历史图快照等一致性缺陷，并确认普通聊天的行动反馈归因尚未接通；完整V1验收重新开放，生产代码本轮未修。** 各组件实际工作方式、9项问题/边界及修改建议见[组件讲解与审查](reports/component_review.md)。
-
-## 运行
-
-小温暖角色：双击根目录 **`启动小温暖.cmd`**。原卡与可加载卡位于 [小温暖角色配置](config/personas/xiaowennuan/README.md)，使用记忆库 `var/xiaowennuan`。2026-10-21 已按用户要求完整继承 ATRI 的历史记忆，当前人格为小温暖；原库及迁移前备份保留，迁移后两个库不自动同步。内部 agent ID 保留 `atri` 以维护不可变档案引用，启动器已同步；沿用本机凭据及 live 调用节奏。
-
-Windows 一键启动：双击根目录 **`启动MYATRI.cmd`**。自动同步锁定环境、检查本机凭据和角色库，再打开真实聊天；固定使用 `var/myatri-main`，以后双击会继续同一份记忆。已有角色卡不会被模板覆盖；首次创建时读取 `config/persona_template.md`。同一启动器禁止重复打开同一角色库。
-
-真实聊天会调用付费 DeepSeek API，后台整理与情绪评价一起运行。输入 `/quit` 退出；关闭后停止处理。密钥保存在 Windows 凭据管理器，不写入脚本或配置；缺少凭据时首次启动会隐藏输入。私有 live 配置缺失时按公开模板生成，日预算 1,000,000 tokens；已有配置保持原值。日额度覆盖同一运行库，不是账号跨库硬上限。
-
-只检查启动准备、不调用模型：`powershell -NoProfile -ExecutionPolicy Bypass -File scripts/start_myatri.ps1 -CheckOnly`。
-
-在本目录的 PowerShell：
+按 [uv 官方文档](https://docs.astral.sh/uv/getting-started/installation/) 安装 uv：
 
 ```powershell
-uv sync --frozen
-.venv/Scripts/myatri.exe --root var/atri init
-.venv/Scripts/myatri.exe --root var/atri chat --mode offline
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
 ```
 
-单轮与检查：
+然后重开 PowerShell。以下命令从项目根目录执行；使用 PowerShell，不要将命令直接粘到聊天输入框。
+
+### 2. 克隆并安装锁定环境
 
 ```powershell
-.venv/Scripts/myatri.exe --root var/atri chat --message '电影临时取消后，我想先说清自己的期待。'
-.venv/Scripts/myatri.exe --root var/atri recall '电影期待' --explain
-.venv/Scripts/myatri.exe --root var/atri worker --once
-.venv/Scripts/myatri.exe --root var/atri doctor
+git clone https://github.com/Jianqu0817/MYATRI.git
+Set-Location MYATRI
+uv python install 3.12
+uv sync --frozen --extra neural
 ```
 
-真实中文神经向量（可选，模型已在本次工作区下载）：
+首次需要下载 Python/依赖，耗时取决于网络。无需激活虚拟环境，后文直接调用 `.venv\Scripts\python.exe`。
+
+仓库包含源码、角色卡、配置模板和锁文件，**不包含** Key、个人档案、运行库、模型权重和已安装的 Harness。克隆不会恢复另一台电脑的记忆。
+
+### 3. 先做不调用 API 的演示（可选）
+
+```powershell
+.\.venv\Scripts\python.exe -m myatri.interfaces.cli --root var/demo companion --mode offline --message "你好" --no-ui
+```
+
+使用独立 `var/demo`，不混入正式小温暖库。`offline` 为固定测试模型，用于确认程序流程，不代表真实角色质量或本地大模型能力。这条命令不调用 DeepSeek，不要求微信。
+
+### 4. 保存 DeepSeek Key
+
+```powershell
+.\.venv\Scripts\python.exe -m myatri.credentials store-deepseek
+```
+
+按提示隐藏输入并回车，保存到当前 Windows 用户凭据管理器，目标为 `MYATRI/DeepSeek/api.deepseek.com`。不写入项目、不在命令行参数传 Key。另一仓库已在同一用户下保存过时可复用。
+
+该命令仅保存凭据，不调用模型；首次正常双击启动也会在缺少 Key 时提示隐藏输入。
+
+### 5. 启动真实聊天
+
+双击 **`启动小温暖.cmd`**。程序会：
+
+1. 检查锁定依赖。
+2. 缺少时从公开模板生成 `config/cli-engine.local.toml`，启用真实聊天；已有文件保留。
+3. 初始化或检查 `var/xiaowennuan/`，保留既有档案，运行完整性检查。
+4. 加载角色卡并进入 `companion --mode live`；启动监视与控制界面。
+
+看到输入提示后聊天，输入 `/quit` 退出。**正常双击使用付费 API，后台摘要、情绪评价和维护也可能调用模型。**
+
+只检查准备情况：
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/start_myatri.ps1 -Character xiaowennuan -CheckOnly
+```
+
+`CheckOnly` 不调用模型、不停止当前聊天，但可能首次创建私有配置/角色库；并非完全只读。缺少 Key 会提示失败，可先执行第 4 步。
+
+## 日常使用
+
+### 入口与记忆库
+
+| 入口 | 默认库 | 说明 |
+| --- | --- | --- |
+| `启动小温暖.cmd` | `var/xiaowennuan/` | 推荐日常入口，内部 agent 仍为 `atri` |
+| `启动MYATRI.cmd` | `var/myatri-main/` | 另一份独立记忆，不会自动读取小温暖库 |
+| 手动 `companion` | `--root` 指定 | 必须显式指定原 root/agent 才能延续原档案 |
+| 旧 `chat` 子命令 | `--root` 指定 | 兼容旧接口，不含完整 companion 渠道能力 |
+
+两个双击入口当前均进入完整 CLI；默认 companion 角色模板为小温暖，不能单凭文件名把 `启动MYATRI.cmd` 理解为旧版 ATRI 角色。首次升级加载磁盘卡时，会在原档案中形成新人格版本，旧版本保留。
+
+正常双击会尝试替换**本项目的旧 CLI 服务**。同一库不要并发启动多个聊天写入者；两个不同库若使用相同 UI 端口，也会冲突。退出用 `/quit` 或 Ctrl+C，等待程序收尾。
+
+手动指定私有配置与原库：
+
+```powershell
+.\.venv\Scripts\python.exe -m myatri.interfaces.cli --root var/xiaowennuan --agent atri --config config/cli-engine.local.toml companion --mode live
+```
+
+全局参数 `--root`、`--agent`、`--config` 放在子命令 `companion` **前面**。不要漏写 root，否则底层 CLI 默认是另一目录 `var/atri`。
+
+### 聊天内命令
+
+| 命令 | 用途 |
+| --- | --- |
+| `/quit` | 正常退出并保留已有记忆 |
+| `/reload` | 重载磁盘角色卡/提示词，更新运行人格 |
+| `/clear` | 清空工作上下文，不删除长期记忆 |
+| `/context` | 查看当前上下文统计 |
+| `/memory 关键词` | 本地检索原库记忆 |
+| `/retry-memory` | 对摘要/记忆任务进行有限恢复 |
+| `/compact` | 压缩上下文，live 时可能调用模型 |
+| `/pc 任务 目标` | 已启用电脑 Agent 时发起执行 |
+
+`/clear` 不是“彻底忘记”，旧长期条目以后仍可能被检索。不要把失败回合当作成功执行；根据终端错误和任务回执排查，避免重复提交有副作用的电脑任务。
+
+## 窗口与配置
+
+聊天运行后，可打开：
+
+| 地址 | 功能 |
+| --- | --- |
+| `127.0.0.1:8776` | 本机控制 API，带 Bearer 鉴权 |
+| <http://127.0.0.1:8777/> | 运行监视、今日 Token、记忆/情绪与维护状态 |
+| <http://127.0.0.1:8778/> | 实际请求与上下文、重载/清窗等控制 |
+
+`Monitor-Context.cmd` 与 `View-Context.cmd` **只打开浏览器**，不启动服务器。先运行完整 companion；使用 `--no-ui` 时不会启动这些界面。端口与 AstrBot 仓库的 8766—8768 不同。
+
+| 文件 | 用途 |
+| --- | --- |
+| `config/cli-engine.toml` | 公开配置模板，`allow_paid=false` |
+| `config/cli-engine.local.toml` | 双击入口使用的私有配置；首次生成后保留 |
+| `config/personas/xiaowennuan/persona.md` | 当前小温暖角色卡模板 |
+| `config/cli.local.toml` | 运行时生成的界面路由配置，不是模型主配置 |
+| `var/cli-token.txt` | 本机界面令牌 |
+| `config/harness/executor.local.json` | 电脑 Agent 本机 skills/MCP 扩展 |
+
+手动 companion 不带 `--config` 时依次选择本机私有 CLI 配置、公开 CLI 配置等默认来源；配置按所选文件读取，不是把所有文件逐层合并。部署时建议显式指定。修改配置通常需正常重启；修改角色卡后用 `/reload`，只改 Markdown 不等于运行人格已变化。
+
+默认 `[companion].capture_requests=true`；实际采集包含发给模型的角色卡/上下文。需要关闭时在私有配置的现有表内修改，再重启。查看器不能补采关闭期间的旧请求。
+
+所有端口默认只在本机回环使用，不要直接开放到公网。
+
+## 联网搜索
+
+不需要安装电脑 Harness。编辑 `config/cli-engine.local.toml` 已有表：
+
+```toml
+[companion.web]
+enabled = true
+backend = "deepseek-api"
+timeout_seconds = 25
+max_results = 3
+daily_limit = 40
+cache_ttl_hours = 24
+```
+
+重启后可说“查一下网上……”。直接调用 `https://api.deepseek.com/v1/tools/search`，复用模型凭据，只传检索参数。接口需要对账户可用，权限/限额按真实返回处理；默认 40 次/日与 24 小时缓存。
+
+搜索次数额度不等于聊天 Token 硬预算，费用以供应商账单为准。公开模板默认关闭联网；有旧本机配置时检查其原后端和路径，不自动覆盖。
+
+## 安装电脑执行 Agent
+
+### 1. 明确本机 owner
+
+先正常启动或检查一次，生成 `config/cli-engine.local.toml`。编辑其中 `[companion]`：
+
+```toml
+owner_id = "local-owner"
+owner_name = "菅蘧"
+```
+
+这是独立本机终端身份，沿用原稳定 ID 即可，不需要虚构微信 ID。已有身份不要随意更换；电脑表中的 owner 必须相同。名字字段需为菅蘧，真正授权使用稳定 ID。
+
+终端是可信本机入口，能够操作此终端的人也能使用该 owner；名称不是密码。
+
+### 2. 安装 Harness
+
+准备 Node.js **22 x64，至少 22.19**，确认 `node --version`、`npm --version` 正常。使用 JavaScript 版 pnpm 10，参见 [pnpm 安装说明](https://pnpm.io/installation)；安装脚本需要 JS 入口，不能传 `pnpm.exe` 或 `pnpm.cmd`。
+
+```powershell
+npm install --prefix "var/harness-bootstrap" pnpm@10
+$harnessNode = (Get-Command node.exe).Source
+$harnessPnpm = (Resolve-Path "var/harness-bootstrap/node_modules/pnpm/bin/pnpm.cjs").Path
+.\.venv\Scripts\python.exe scripts/setup_computer_control.py --node "$harnessNode" --pnpm-js "$harnessPnpm" --full
+```
+
+按仓库锁文件安装 DSH **0.2.1-rc.2** 到 `var/harness/`，绑定现有 owner、启用 full Agent，做不调用模型的组合探测。下载依赖需要网络；不自动启动聊天，也不自动执行真实任务。
+
+需要 skills/MCP 时，首次创建：
+
+```powershell
+Copy-Item config/harness/executor.example.json config/harness/executor.local.json
+```
+
+已有文件不覆盖。正常重启聊天加载新设置。基础 PowerShell、文件等工具不要求额外 MCP。
+
+### 3. 调用和报告
+
+```text
+/pc 任务 查询本机内存总量和可用内存，只读取
+/pc 任务 检查 Python、Git、Node 的版本并整理
+/pc 状态 完整任务ID
+/pc 暂停 完整任务ID
+/pc 继续 完整任务ID
+/pc 取消 完整任务ID
+```
+
+也支持绑定 owner 的自然语言电脑请求。主小温暖生成 instructions，子 Agent 执行 Harness；实际结果通过原工具调用返回原聊天回合，由小温暖生成终端最终报告。不会把“已入队”当作任务完成。
+
+`full` 可使用 PowerShell、文件读写/编辑/搜索、后台任务、skills 和已配置 MCP，在当前 Windows 账户权限内工作，**不是文件沙箱，也不自动取得管理员权限**。点击桌面、截图、外部设备等仍取决于实际工具接入。
+
+任务检查点保存在原库，集成模型调用共用原预算；重启恢复原任务/原工具回合，执行结果不明时不自动重做。受阻看真实回执、缺失条件与 `chat_report`，不要反复新建同一任务。`Harness.cmd` 独立 CLI 不等同于聊天任务，其调用不应被假定全部纳入本项目账本。
+
+## 记忆情绪与自动维护
+
+本地原始档案/版本化记录是依据，索引是可重建的检索层；检索到一句话不等于已证实事实。
+
+- 近期监听、确认对话、摘要和长期条目分别处理，原始出处与人物身份保留。
+- 身份不明、支持不足、校验失败的候选隔离；合格条目可独立推进，不把整批错误当真。
+- PAD 情绪与较慢变化的心境会衰减；长期人格更新与临时情绪分开保存。
+- 默认每 50 个完成往返触发一批维护，深度/人格维护按批次安排；不是每句都立即产生长期记忆。
+- `[companion.recovery].enabled=true` 默认启用有限恢复，恢复有预算与重试边界，保留原文/历史失败，不等于把告警数归零。
+- 主动发言公开模板默认关闭、影子模式开启。启用前检查 `[companion.proactive]`；这里只向当前终端展示，不提供微信/邮件外发。`[outreach].enabled` 保持关闭，双击入口会拒绝旧的外发配置。
+- 电脑任务最终结果回传不依赖主动闲聊开关。
+
+运行库中的 `runtime.sqlite3` 不只是可删缓存，还含任务、协议、账本等状态；`<root>/cli-runtime/` 保存渠道侧上下文/维护资料。备份应完整保留 root，不能仅留向量库。
+
+## Token预算与费用
+
+当前公开默认值：
+
+| 项目 | 默认值 |
+| --- | --- |
+| 每日模型额度 | **50,000,000 Token** |
+| 单请求上下文预算 | 1,000,000 |
+| 压缩阈值 | 650,000 |
+| 工作上下文窗口 | 200,000 |
+| 对话/近期消息选材上限 | 80 组往返 / 100 条消息 |
+| 模型 | `deepseek-flash`，以实际账户可用性为准 |
+| 思考 | 开启，`reasoning_effort="low"`，组合上限 8192，超时 120 秒 |
+
+容量参数是限制，不是每轮必填长度。模型、能力与价格随供应商变化；改模型时要核对思考参数和实际上下文能力。
+
+主回复、后台摘要/情绪/维护及集成电脑 Agent 都可能计费。监视页“今日 Token”取本地账本，不等于整个账户账单，不自动合并 AstrBot 库、独立 CLI 和搜索；估价价格默认 0 表示未配置，不代表 API 免费。
+
+如需调整，在私有配置中修改已有 `[budget]` / `[chat]` / `[context]`，保留价格依据，正常重启。不要删除账本绕过限制。
+
+## 可选本地嵌入模型
+
+没有模型权重也能启动：默认 `embedding.backend="auto"` 在缺少已核验 BGE 时退回本地 TF-IDF。依赖 `--extra neural` 与模型权重是两回事；聊天不会暗中自动下载权重。
+
+需要 BGE 时显式执行：
 
 ```powershell
 uv sync --frozen --extra neural
-# 新环境需要显式执行；普通聊天不会自动下载模型
-.venv/Scripts/myatri.exe models download --path var/models/bge-small-zh-v1.5
-.venv/Scripts/myatri.exe --root var/atri memory rebuild-index --space bge
+.\.venv\Scripts\python.exe -m myatri.interfaces.cli models download --path var/models/bge-small-zh-v1.5
+.\.venv\Scripts\python.exe -m myatri.interfaces.cli --root var/xiaowennuan --agent atri memory rebuild-index --space bge --model-path var/models/bge-small-zh-v1.5
 ```
 
-默认真实TF-IDF词面基线无需下载模型；BGE为固定revision的本地512维ONNX推理；Leiden是真实运行的算法。相似度不证明同义，尤其不能由相似直接推导支持/人格变化。
+下载需要网络，重建会写入选定库的新索引。与正在使用同一库的聊天错开执行；不需要 GPU。只想最低部署可跳过整个部分。
 
-## 验证与交付
+## 常见问题
+
+| 现象 | 处理 |
+| --- | --- |
+| 找不到 uv | 安装后重开终端，确认 PATH；默认安装也可能位于用户 `.local/bin` |
+| Python 版本错误 | 使用 `uv python install 3.12` 与项目锁文件，不沿用其他项目的 venv |
+| 依赖下载失败 | 修复网络后重跑 sync；不要删除正式记忆库 |
+| Key 缺失/无效、401 | 执行隐藏凭据保存命令；确认当前 Windows 用户、真实 Key 与供应商返回 |
+| 429/余额不足 | 依据供应商错误处理额度/限流，不通过反复重启增加重试 |
+| 付费/能力配置错误 | 核对所选配置、供应商能力与运行模式；完整 companion 的显式 live 会启用真实模型，旧 chat/worker 还会检查付费配置 |
+| 不认识以前的事 | 先核对启动器打印的绝对记忆目录与 agent；两个入口不是同库 |
+| 双击检查通过却没聊天 | 使用了 CheckOnly；正常双击不加该选项 |
+| 浏览器连接拒绝 | 先启动完整 companion，检查是否 `--no-ui`、端口冲突或进程退出 |
+| 改角色卡没生效 | 输入 `/reload`，核对实际加载文件与人格版本 |
+| 清窗后仍记得旧事 | `/clear` 只清工作上下文，长期记忆仍保留 |
+| BGE 不存在 | auto 会用 TF-IDF；强制 bge 则需显式下载核验模型 |
+| 告警仍有失败/隔离 | 查看具体任务与来源；有限恢复不抹除历史，不能手删记录“修复” |
+| 电脑任务说无权限 | 核对 companion owner、电脑 owner、enabled/agent_enabled 和 live 模式 |
+| 任务执行后无最终报告 | 查看任务回执/同轮续接状态，正常重启加载当前代码；不要重复执行 |
+| 完整性检查失败 | 先保留全库备份，运行 doctor 看具体问题，避免删除 SQLite 或原始记录 |
+| 有锁/端口占用 | 退出原窗口，等待收尾；不要删除锁强开同库 |
+
+最低诊断命令：
 
 ```powershell
-.venv/Scripts/python.exe -m pytest -q
-.venv/Scripts/myatri.exe eval --suite all --neural-path var/models/bge-small-zh-v1.5
-uv build
+.\.venv\Scripts\python.exe -m myatri.interfaces.cli --root var/xiaowennuan --agent atri doctor
+.\.venv\Scripts\python.exe -m myatri.interfaces.cli --root var/xiaowennuan --agent atri cost inspect
+.\.venv\Scripts\python.exe -m myatri.interfaces.cli --root var/xiaowennuan --agent atri emotion show
 ```
 
-- [运行与恢复手册](docs/运行与恢复手册.md)
-- [交付与限制](docs/交付与限制.md)
-- [验收报告](reports/acceptance.md)、[评估](reports/evaluation.md)、[live状态](reports/live_smoke.md)
-- [当前进度](docs/progress/STATUS.md)、[无对话历史的恢复入口](docs/progress/HANDOFF.md)
-- [规划0.3](docs/01_工程规划书.md)、[动态索引/技能记忆检查稿](docs/04_动态索引与技能记忆设计.md)、[任务清单（原0.2排程）](docs/02_实施任务清单.json)、[锁定来源](docs/03_参考源码锁定.json)
-- [依赖及参考许可](THIRD_PARTY_NOTICES.md)、[实际依赖许可清单](reports/dependency_licenses.json)
+`doctor` 检查结构与完整性，不证明长期记忆语义质量或付费模型可用。对外发日志/实际请求前去掉对话、Key、令牌和个人信息。
 
-八模块：providers / storage / memory / retrieval / persona / conversation / cognition / runtime。认知任务只生成提案，统一提交器校验版本；文本档案权威，SQLite和向量索引可重建。E01不属于本次实现。
+## 更新备份与迁移
 
-## 本机已验证的官方live测试
+### 更新
 
-密钥已安全配置，`.venv/Scripts/python.exe -m myatri.credentials status`只显示配置状态。真实API需显式命令：
+退出 CLI 后备份，然后：
 
 ```powershell
-.venv/Scripts/myatri.exe --config config/live.local.toml --root var/atri-live chat --mode live
+git status --short
+git pull --ff-only
+uv sync --frozen --extra neural
 ```
 
-本机live.local.toml仅含开关/模型/额度配置、不含key，已从Git、备份与发行包排除；公开模板为config/live.example.toml，默认关闭paid。不会自动启动常驻付费任务。跨机器需重新设置Windows凭据。实测13次请求与初测问题修复记录见[完整live报告](reports/live_smoke.md)。
+有自己的已跟踪修改时先保留并解决，不用 `reset --hard` 清理。随后打开原来的启动器，使用原库。私有配置不会被模板覆盖，新功能默认值需要和公开模板对照核对。不要同时更换 root、agent 和角色卡来测试升级。
+
+### 备份与恢复
+
+最直接的备份：**正常退出后完整复制当前 root**（如 `var/xiaowennuan/`），另备份角色卡、私有配置、Harness 本机配置与需要保留的工具资料。备份放仓库外，不上传个人档案到 GitHub。
+
+也可使用内核档案备份命令：
+
+```powershell
+New-Item -ItemType Directory -Force -Path "D:/MYATRI-backups" | Out-Null
+.\.venv\Scripts\python.exe -m myatri.interfaces.cli --root var/xiaowennuan --agent atri backup --output D:/MYATRI-backups/xiaowennuan.zip
+.\.venv\Scripts\python.exe -m myatri.interfaces.cli restore --input D:/MYATRI-backups/xiaowennuan.zip --target var/restored-xiaowennuan
+```
+
+恢复目标必须是**尚不存在的新目录**，不覆盖正式库。内置 ZIP 备份单独保存根 `runtime.sqlite3`，其他 SQLite 会被过滤，因此不能代替完整 CLI 渠道状态的冷备份；要完整延续上下文/任务，优先停机复制整个 root。私有配置/工具资料另备份，重复备份使用新文件名。
+
+换电脑后重新 `uv sync`，复制完整运行库并显式使用原 root/agent，修正绝对路径，重新安装 Harness；Windows 凭据不能靠复制项目迁移，需在新用户下重新保存 Key。保留原机器备份直至确认恢复。
+
+## 开发与维护
+
+代码：`src/myatri/`；完整渠道：`src/myatri/companion/`；配置/提示词：`config/`；启动与安装：`scripts/`；定向验证：`tests/`。
+
+接手先读：
+
+- [项目总览与 Agent 维护指南](docs/项目总览与Agent维护指南.md)
+- [当前状态](docs/progress/STATUS.md) 与 [接续说明](docs/progress/HANDOFF.md)
+- [CLI 迁移说明](docs/CLI迁移_2026-10-22.md)
+- [Harness 结果回传移植](docs/Harness结果回传移植_2026-10-22.md)
+- [通用执行与双仓边界](docs/Harness通用执行与双仓迁移_2026-10-22.md)
+
+原始记录/版本化档案是权威来源，索引可重建；不要手改记录或以相似度当支持证据。开发使用锁定环境，按实际改动跑定向测试。文档更新检查链接、命令入口和 diff 即可，不需要付费模型调用或生产重启。
+
+本仓库未把所有构想都实现为工具：桌面视觉/设备、额外 skills/MCP 必须有实际配置；自动维护机制通过不代表长期人格与记忆效果已完成实证。第三方依赖及引用的资源按各自许可使用，来源与实现边界见维护文档和仓库内 `LICENSES/`。
